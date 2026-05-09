@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Elevation</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:24px;background:var(--cream-canvas);font-family:var(--font-sans);}
+  .row{display:flex;gap:18px;align-items:flex-end;}
+  .item{display:flex;flex-direction:column;gap:8px;align-items:center;font-size:11px;color:var(--muted);font-family:var(--font-mono);}
+  .box{width:90px;height:60px;background:#fff;border-radius:8px;border:1px solid var(--cream-hairline);}
+  .box.flat{border-color:transparent;background:var(--cream-card);}
+  .box.s1{box-shadow:var(--shadow-1);border-color:transparent;}
+  .box.s2{box-shadow:var(--shadow-2);border-color:transparent;}
+  .box.coral{background:var(--brand-coral);box-shadow:var(--shadow-product),var(--shadow-coral-inset);border-color:#9c5a3c;}
+</style></head><body>
+<div class="row">
+  <div class="item"><div class="box flat"></div>flat<br/>(card)</div>
+  <div class="item"><div class="box"></div>hairline</div>
+  <div class="item"><div class="box s1"></div>shadow-1<br/>(soft)</div>
+  <div class="item"><div class="box s2"></div>shadow-2<br/>(hover)</div>
+  <div class="item"><div class="box coral"></div>coral<br/>(inner glow)</div>
+</div>
+</body></html>

@@ -1,0 +1,749 @@
+/* ============================================================
+   Delivery — design tokens (warm-editorial)
+   Cream marketing surface (#FAF9F5) + dark product (#262625) +
+   coral primary (#CC785C). Fraunces (serif) for marketing
+   display only; Inter for product UI.
+   ============================================================ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  /* ---------- Brand ---------- */
+  --brand-coral:           #cc785c;
+  --brand-coral-active:    #a9583e;
+  --brand-coral-hover:     #b8684e;
+  --brand-coral-disabled:  #e6dfd8;
+  --brand-coral-soft:      rgba(204,120,92,0.12);
+
+  /* ---------- Cream ---------- */
+  --cream-canvas:          #faf9f5;
+  --cream-soft:            #f5f0e8;
+  --cream-card:            #efe9de;
+  --cream-strong:          #e8e0d2;
+  --cream-hairline:        #e6dfd8;
+  --cream-hairline-soft:   #ebe6df;
+
+  /* ---------- Dark ---------- */
+  --slate-900:             #181715;
+  --slate-850:             #1f1e1b;
+  --slate-800:             #252320;
+  --slate-700:             #34332f;
+  --slate-600:             #404040;
+  --slate-500:             #666663;
+  --slate-400:             #91918d;
+  --slate-300:             #bfbfba;
+
+  --product-bg:            #262625;
+  --product-sidebar:       #22211d;
+  --product-input:         #282624;
+  --product-input-border:  #393831;
+  --product-stroke:        #373632;
+  --product-stroke-soft:   rgba(255,255,255,0.08);
+  --product-overlay:       rgba(255,255,255,0.05);
+
+  /* ---------- Text ---------- */
+  --ink:                   #141413;
+  --body-strong:           #252523;
+  --body:                  #3d3d3a;
+  --muted:                 #6c6a64;
+  --muted-soft:            #8e8b82;
+  --on-dark:               #faf9f5;
+  --on-dark-strong:        #ffffff;
+  --on-dark-soft:          rgba(255,255,255,0.66);
+  --on-dark-faint:         rgba(255,255,255,0.42);
+
+  /* ---------- Semantic ---------- */
+  --success:               #5db872;
+  --warning:               #d4a017;
+  --error:                 #c64545;
+  --error-product:         #bf4d43;
+  --error-text:            #e87a7a;  /* used on dark surfaces; flips to var(--error) in light theme */
+  --info:                  #207fde;
+  --accent-purple:         #9b87f5;
+  --accent-teal:           #5db8a6;
+  --accent-amber:          #e8a55a;
+
+  /* ---------- Type ---------- */
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:  "JetBrains Mono", "Fira Code", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 4px; --radius-sm: 6px; --radius-md: 8px;
+  --radius-lg: 12px; --radius-xl: 16px; --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  /* ---------- Spacing 4-base ---------- */
+  --sp-xxs: 4px;  --sp-xs: 8px; --sp-sm: 12px; --sp-md: 16px;
+  --sp-lg: 24px;  --sp-xl: 32px; --sp-2xl: 48px; --sp-3xl: 64px;
+
+  /* ---------- Elevation (rare) ---------- */
+  --shadow-1: 0 1px 3px rgba(20,20,19,0.08);
+  --shadow-2: 0 4px 12px rgba(20,20,19,0.10);
+  --shadow-product: -1px 1px 4px rgba(0,0,0,0.25);
+  --shadow-coral-inset: inset 0 1.5px 0 rgba(186,111,48,0.5);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--body);
+  background: var(--cream-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ============================================================
+   Display & title roles
+   ============================================================ */
+.display-xl { font-family: var(--font-serif); font-weight: 400; font-size: 64px; line-height: 1.05; letter-spacing: -1.5px; color: var(--ink); }
+.display-lg { font-family: var(--font-serif); font-weight: 400; font-size: 48px; line-height: 1.10; letter-spacing: -1.0px; color: var(--ink); }
+.display-md { font-family: var(--font-serif); font-weight: 400; font-size: 36px; line-height: 1.15; letter-spacing: -0.5px; color: var(--ink); }
+.display-sm { font-family: var(--font-serif); font-weight: 400; font-size: 28px; line-height: 1.20; letter-spacing: -0.3px; color: var(--ink); }
+
+.title-lg { font-family: var(--font-sans); font-weight: 500; font-size: 22px; line-height: 1.3; color: var(--ink); }
+.title-md { font-family: var(--font-sans); font-weight: 500; font-size: 18px; line-height: 1.4; color: var(--ink); }
+.title-sm { font-family: var(--font-sans); font-weight: 500; font-size: 16px; line-height: 1.4; color: var(--ink); }
+
+.body-md { font-size: 16px; line-height: 1.55; color: var(--body); }
+.body-sm { font-size: 14px; line-height: 1.55; color: var(--body); }
+.body-xs { font-size: 13px; line-height: 1.5; color: var(--body); }
+
+.caption    { font-size: 13px; line-height: 1.4; color: var(--muted); font-weight: 500; }
+.caption-up { font-size: 12px; line-height: 1.4; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+
+.mono { font-family: var(--font-mono); }
+
+/* ============================================================
+   Status pills (parcel stages) — alpha bg + colored text + dot
+   ============================================================ */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 24px; padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans); font-weight: 500;
+  font-size: 12px; letter-spacing: 0;
+  white-space: nowrap;
+}
+.status-pill::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; opacity: 0.95;
+}
+.s-ordered { background: rgba(140,135,130,0.14); color: var(--muted); }
+.s-usa     { background: rgba(93,184,166,0.14); color: var(--accent-teal); }
+.s-tokg    { background: rgba(155,135,245,0.14); color: var(--accent-purple); }
+.s-kg      { background: rgba(232,165,90,0.18); color: var(--accent-amber); }
+.s-toru    { background: rgba(155,135,245,0.14); color: var(--accent-purple); }
+.s-done    { background: rgba(93,184,114,0.16); color: var(--success); }
+.s-late    { background: rgba(198,69,69,0.16); color: var(--error); }
+.s-problem { background: rgba(212,160,23,0.18); color: var(--warning); }
+
+/* On dark surfaces: brighten alpha bg */
+.surface-dark .status-pill,
+.dark-scope .status-pill {
+  background-color: rgba(255,255,255,0.06);
+}
+.dark-scope .s-usa     { color: #7fd1c0; }
+.dark-scope .s-tokg    { color: #b9a9f7; }
+.dark-scope .s-toru    { color: #b9a9f7; }
+.dark-scope .s-kg      { color: #f1bf83; }
+.dark-scope .s-done    { color: #82d693; }
+.dark-scope .s-late    { color: var(--error-text); background: rgba(198,69,69,0.18); }
+.dark-scope .s-problem { color: #ecc35b; }
+.dark-scope .s-ordered { color: var(--on-dark-soft); }
+
+/* ============================================================
+   Tracking number type
+   ============================================================ */
+.track-no {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: -0.2px;
+  color: var(--ink);
+  font-weight: 500;
+  word-break: break-all;
+}
+.track-no.lg { font-size: 22px; line-height: 1.2; }
+.track-no.xl { font-size: 28px; line-height: 1.15; }
+.dark-scope .track-no { color: var(--on-dark-strong); }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-sans); font-weight: 500;
+  font-size: 16px; line-height: 1; letter-spacing: -0.2px;
+  padding: 0 18px; height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--brand-coral);
+  color: #fff;
+  box-shadow: var(--shadow-coral-inset);
+}
+.btn-primary:hover { background: var(--brand-coral-hover); }
+.btn-primary:active { background: var(--brand-coral-active); }
+.btn-primary:disabled { background: var(--brand-coral-disabled); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--cream-hairline);
+}
+.btn-secondary:hover { background: var(--cream-card); }
+.dark-scope .btn-secondary { color: var(--on-dark); border-color: var(--product-stroke); }
+.dark-scope .btn-secondary:hover { background: var(--product-overlay); }
+
+.btn-ghost {
+  background: transparent; color: var(--muted); border-color: transparent;
+}
+.btn-ghost:hover { background: var(--cream-card); color: var(--ink); }
+.dark-scope .btn-ghost { color: var(--on-dark-soft); }
+.dark-scope .btn-ghost:hover { background: var(--product-overlay); color: var(--on-dark); }
+
+.btn-block { width: 100%; }
+.btn-lg { height: 56px; font-size: 17px; padding: 0 24px; }
+.btn-sm { height: 34px; font-size: 14px; padding: 0 12px; }
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--cream-canvas);
+  border: 1px solid var(--cream-hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-lg);
+}
+.dark-scope .card {
+  background: var(--slate-800);
+  border-color: var(--product-stroke);
+  color: var(--on-dark);
+}
+
+.card-flat { border: 0; padding: 0; background: transparent; }
+
+/* ============================================================
+   Inputs
+   ============================================================ */
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--cream-hairline);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  outline: none;
+}
+.input:focus { border-color: var(--brand-coral); box-shadow: 0 0 0 3px rgba(204,120,92,0.15); }
+.dark-scope .input {
+  background: var(--product-input);
+  color: var(--on-dark-strong);
+  border-color: var(--product-input-border);
+}
+.dark-scope .input::placeholder { color: var(--on-dark-faint); }
+.dark-scope .input:focus { border-color: var(--brand-coral); box-shadow: 0 0 0 3px rgba(204,120,92,0.25); }
+
+label.field {
+  display: block;
+  margin-bottom: 14px;
+}
+label.field > .field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+.dark-scope label.field > .field-label { color: var(--on-dark-soft); }
+
+/* ============================================================
+   Surfaces
+   ============================================================ */
+.surface-cream { background: var(--cream-canvas); color: var(--ink); }
+.surface-dark  { background: var(--product-bg); color: var(--on-dark); min-height: 100vh; }
+
+/* ============================================================
+   Hot / overdue panel — "пожар"
+   ============================================================ */
+.hot-panel {
+  background: linear-gradient(180deg, rgba(198,69,69,0.10), rgba(198,69,69,0.04));
+  border: 1px solid rgba(198,69,69,0.30);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-md) var(--sp-md);
+}
+.dark-scope .hot-panel {
+  background: linear-gradient(180deg, rgba(198,69,69,0.15), rgba(198,69,69,0.05));
+  border-color: rgba(198,69,69,0.45);
+}
+.hot-panel .hot-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--error);
+  margin-bottom: var(--sp-sm);
+  display: flex; align-items: center; gap: 8px;
+}
+.dark-scope .hot-panel .hot-title { color: var(--error-text); }
+.hot-panel .hot-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-md);
+  padding: 10px 0;
+  border-top: 1px solid rgba(198,69,69,0.15);
+}
+.dark-scope .hot-panel .hot-row { border-top-color: rgba(255,255,255,0.06); }
+.hot-panel .hot-row:first-of-type { border-top: 0; }
+
+/* ============================================================
+   Tab segments (mobile)
+   ============================================================ */
+.tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--cream-card);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+}
+.dark-scope .tabs { background: var(--product-input); }
+
+.tab {
+  flex: 1;
+  height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 0; background: transparent;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dark-scope .tab { color: var(--on-dark-soft); }
+.tab.active {
+  background: var(--cream-canvas);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+.dark-scope .tab.active {
+  background: var(--slate-700);
+  color: var(--on-dark-strong);
+  box-shadow: none;
+}
+.tab .count {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tab.active .count { color: var(--ink); }
+.dark-scope .tab.active .count { color: var(--on-dark-strong); }
+
+/* ============================================================
+   App shell — single pattern for forwarder & admin.
+   Top nav, fluid content, no sidebars, no bottom bars.
+   ============================================================ */
+.app-shell {
+  min-height: 100vh;
+  background: var(--product-bg);
+  color: var(--on-dark);
+  display: flex; flex-direction: column;
+}
+
+.top-nav {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--product-bg);
+  border-bottom: 1px solid var(--product-stroke);
+  display: flex; align-items: center;
+  gap: 24px;
+  padding: 14px 32px;
+}
+.top-nav .brand {
+  font-family: var(--font-serif);
+  font-size: 22px; font-weight: 500;
+  letter-spacing: -0.5px;
+  color: var(--on-dark-strong);
+  white-space: nowrap;
+}
+.top-nav .brand .dot { color: var(--brand-coral); }
+
+.top-nav .nav-links {
+  display: flex; gap: 4px; flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.top-nav .nav-links::-webkit-scrollbar { display: none; }
+.top-nav .nav-links a {
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  color: var(--on-dark-soft);
+  font-size: 14px; font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.top-nav .nav-links a:hover { color: var(--on-dark); background: var(--product-overlay); }
+.top-nav .nav-links a.active { background: var(--slate-700); color: var(--on-dark-strong); }
+
+.top-nav .who {
+  font-size: 13px; color: var(--on-dark-soft);
+  display: flex; align-items: center; gap: 10px;
+  white-space: nowrap;
+}
+
+.app-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+@media (max-width: 720px) {
+  .top-nav { padding: 12px 16px; gap: 12px; }
+  .top-nav .who .who-name { display: none; }
+  .app-content { padding: 18px 16px 32px; }
+}
+
+/* ============================================================
+   Parcel grid — adapts from 1 col mobile to 3 col desktop
+   ============================================================ */
+.parcel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 720px) {
+  .parcel-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+}
+@media (min-width: 1080px) {
+  .parcel-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* Late variant — replaces "просрочено" badge with subtle red ring */
+.parcel-card-late {
+  border-color: rgba(198,69,69,0.45);
+  background: linear-gradient(180deg, rgba(198,69,69,0.06), rgba(198,69,69,0.02));
+}
+.parcel-card-late .subtitle { color: var(--error-text); }
+
+/* ============================================================
+   Admin parcels table — row-based grid, no display:contents
+   ============================================================ */
+.at-list {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--product-stroke);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--slate-800);
+  font-size: 13px;
+}
+.at-row {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, auto)
+    minmax(0, 1fr)
+    auto
+    minmax(120px, auto)
+    minmax(70px, auto);
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--product-stroke);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 150ms ease-out;
+}
+.at-row:first-child { border-top: 0; }
+.at-row.at-head { background: transparent; }
+.at-row.at-head .at-c { padding: 4px 0; }
+.at-row:not(.at-head):hover { background: var(--product-overlay); }
+.at-row-late { background: rgba(198,69,69,0.05); }
+.at-row-late:hover { background: rgba(198,69,69,0.10); }
+.at-c { min-width: 0; }
+
+@media (max-width: 900px) {
+  .at-row {
+    grid-template-columns:
+      minmax(140px, auto)
+      minmax(0, 1fr)
+      auto
+      auto;
+    font-size: 12px;
+  }
+  .at-row .at-pay { display: none; }
+}
+@media (max-width: 640px) {
+  .at-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: 12px 14px;
+  }
+  .at-row .at-track  { grid-column: 1; grid-row: 1; }
+  .at-row .at-status { grid-column: 2; grid-row: 1; justify-self: end; }
+  .at-row .at-date   { grid-column: 1 / span 2; grid-row: 2; font-size: 12px; }
+  .at-row .at-item   { display: none; }
+  .at-row .at-pay    { display: none; }
+  .at-row.at-head { display: none; }
+  .at-row .track-no { font-size: 13px; word-break: keep-all; }
+}
+
+/* ============================================================
+   Parcels list — table-like rows with mobile stack
+   ============================================================ */
+.parcels-list {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--product-stroke);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--slate-800);
+}
+.pl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(140px, auto) 18px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--product-stroke);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 150ms ease-out;
+}
+.pl-row:first-child { border-top: 0; }
+.pl-row:hover { background: var(--product-overlay); }
+.pl-row-late { background: rgba(198,69,69,0.05); }
+.pl-row-late:hover { background: rgba(198,69,69,0.10); }
+.pl-row-late .pl-date { color: var(--error-text); }
+.pl-track { min-width: 0; }
+.pl-date {
+  color: var(--on-dark-soft);
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+}
+.pl-chevron { color: var(--on-dark-faint); display: inline-flex; align-items: center; }
+
+@media (max-width: 640px) {
+  .pl-row {
+    grid-template-columns: minmax(0, 1fr) 18px;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: 14px 14px;
+  }
+  .pl-track   { grid-column: 1; grid-row: 1; }
+  .pl-chevron { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .pl-status  { grid-column: 1; grid-row: 2; justify-self: start; }
+  .pl-date    { grid-column: 1; grid-row: 2; justify-self: end; }
+  .pl-row .track-no { font-size: 13.5px; }
+}
+
+/* ============================================================
+   Copyable tracking number — click to copy, brief toast above
+   ============================================================ */
+.copy-track-btn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: copy;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  display: inline-block;
+  line-height: 1;
+}
+.copy-track-btn:hover { opacity: 0.85; }
+.copy-track-btn:focus-visible { outline: 2px solid var(--brand-coral); outline-offset: 2px; border-radius: 4px; }
+.copy-toast {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: var(--brand-coral);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+  animation: fade-up 180ms ease-out;
+  z-index: 50;
+  box-shadow: var(--shadow-2);
+}
+
+/* ============================================================
+   Search bar (lives in top-nav)
+   ============================================================ */
+.search-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--product-input);
+  border: 1px solid var(--product-input-border);
+  border-radius: var(--radius-pill);
+  min-width: 220px;
+}
+.search-bar:focus-within { border-color: var(--brand-coral); }
+.search-bar .search-icon { color: var(--on-dark-faint); }
+.search-input {
+  flex: 1;
+  background: transparent; border: 0; outline: 0;
+  color: var(--on-dark-strong);
+  font-size: 14px; font-family: var(--font-sans);
+}
+.search-input::placeholder { color: var(--on-dark-faint); }
+.search-clear { background: transparent; border: 0; color: var(--on-dark-faint); cursor: pointer; padding: 4px; display: inline-flex; align-items: center; }
+.search-clear:hover { color: var(--on-dark); }
+@media (max-width: 720px) {
+  .search-bar { min-width: 0; flex: 1; }
+}
+
+/* ============================================================
+   Stat grid for admin dashboard (3×2 desktop, 2×3 tablet, 1×6 mobile)
+   ============================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 980px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Filter chips (admin parcels table)
+   ============================================================ */
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--product-input);
+  color: var(--on-dark-soft);
+  font-size: 13px; font-weight: 500;
+  border: 1px solid var(--product-input-border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+}
+.chip:hover { color: var(--on-dark); background: var(--product-overlay); }
+.chip.on { background: var(--brand-coral-soft); color: var(--brand-coral); border-color: rgba(204,120,92,0.4); }
+.chip .ct { color: inherit; opacity: 0.65; font-weight: 600; font-size: 11px; }
+
+/* ============================================================
+   Light theme — token flip on root.
+   Re-binds the same CSS variables so all inline styles using
+   --on-dark-*, --product-* etc. auto-recolor without per-class rules.
+   ============================================================ */
+[data-theme="light"] {
+  /* errors */
+  --error-text:            var(--error);
+  /* surfaces */
+  --product-bg:            #faf9f5;
+  --product-sidebar:       #f5f0e8;
+  --product-input:         #ffffff;
+  --product-input-border:  #e6dfd8;
+  --product-stroke:        #e6dfd8;
+  --product-stroke-soft:   rgba(20,20,19,0.06);
+  --product-overlay:       rgba(20,20,19,0.04);
+
+  /* slate fills become creams (used for cards, active states) */
+  --slate-900:             #ffffff;
+  --slate-850:             #ffffff;
+  --slate-800:             #ffffff;
+  --slate-750:             #f5f0e8;
+  --slate-700:             #efe9de;
+  --slate-600:             #efe9de;
+
+  /* "on-dark" text variables flip to ink/muted */
+  --on-dark:               #141413;
+  --on-dark-strong:        #141413;
+  --on-dark-soft:          #6c6a64;
+  --on-dark-faint:         #8e8b82;
+
+  /* shadow becomes a touch warmer */
+  --shadow-product:        0 1px 3px rgba(20,20,19,0.06);
+}
+
+/* Hot panel — colors stay coral/red, but tone the gradient down for cream. */
+[data-theme="light"] .hot-panel {
+  background: linear-gradient(180deg, rgba(198,69,69,0.06), rgba(198,69,69,0.015));
+  border-color: rgba(198,69,69,0.28);
+}
+[data-theme="light"] .hot-panel .hot-row { border-top-color: rgba(198,69,69,0.14); }
+
+/* Status pill text: shift to darker variants on light surfaces. */
+[data-theme="light"] .status-pill { background-color: rgba(20,20,19,0.05); }
+[data-theme="light"] .s-usa     { color: #2c8a78; }
+[data-theme="light"] .s-tokg,
+[data-theme="light"] .s-toru    { color: #6c5bb9; }
+[data-theme="light"] .s-kg      { color: #b27424; }
+[data-theme="light"] .s-done    { color: #2f8c47; }
+[data-theme="light"] .s-late    { color: var(--error); background: rgba(198,69,69,0.10); }
+[data-theme="light"] .s-problem { color: #a37810; }
+[data-theme="light"] .s-ordered { color: var(--muted); }
+
+/* Active tab in light = canvas chip on cream-card track (already works via --slate-700 flip,
+   but tab.active uses var(--on-dark-strong) text which is now ink — good). */
+[data-theme="light"] .tab.active { box-shadow: var(--shadow-1); }
+
+/* Chip "on" state: cream stays warm. */
+[data-theme="light"] .chip.on {
+  background: var(--brand-coral-soft);
+  color: var(--brand-coral-active);
+  border-color: rgba(204,120,92,0.45);
+}
+
+/* ============================================================
+   Misc helpers
+   ============================================================ */
+.divider { height: 1px; background: var(--cream-hairline); margin: var(--sp-md) 0; }
+.dark-scope .divider { background: var(--product-stroke); }
+
+.row { display: flex; gap: var(--sp-md); align-items: center; }
+.col { display: flex; flex-direction: column; gap: var(--sp-sm); }
+.between { justify-content: space-between; }
+.muted { color: var(--muted); }
+.dark-scope .muted { color: var(--on-dark-soft); }
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid var(--cream-hairline);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--cream-card);
+}
+
+/* ============================================================
+   Animations — restrained
+   ============================================================ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-up { animation: fade-up 250ms ease-out; }

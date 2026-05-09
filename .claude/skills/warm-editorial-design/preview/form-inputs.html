@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Form — Inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:24px;background:var(--cream-canvas);font-family:var(--font-sans);}
+  .col{display:flex;flex-direction:column;gap:10px;max-width:440px;}
+  .field{height:40px;padding:10px 14px;font-family:var(--font-sans);font-size:16px;color:var(--ink);background:var(--cream-canvas);border:1px solid var(--cream-hairline);border-radius:var(--radius-md);outline:none;}
+  .field.focused{border-color:var(--brand-coral);box-shadow:0 0 0 3px rgba(204,120,92,0.15);}
+  .label{font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--ink);}
+</style></head><body>
+<div class="col">
+  <label class="label">Name your character</label>
+  <input class="field" value="Eleanor"/>
+  <label class="label" style="margin-top:6px;">Email (focused)</label>
+  <input class="field focused" value="user@example.com"/>
+</div>
+</body></html>
