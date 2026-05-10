@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getParcel, patchParcel } from "@/lib/api/parcels";
+import { getParcel, patchParcel, uploadParcelPhoto } from "@/lib/api/parcels";
 import { listShipments, addParcelToShipment, removeParcelFromShipment } from "@/lib/api/shipments";
 import { ApiError } from "@/lib/api/client";
 import { formatDate, formatDateFull, computeTimings } from "@/lib/derive";
 import { StatusPill } from "@/components/shared/StatusPill";
-import { IconArrowLeft, IconCamera, IconCheck, IconScale, IconTruck, IconPlus, IconChevronRight, IconCalendar } from "@/components/shared/Icons";
+import { IconArrowLeft, IconCheck, IconScale, IconTruck, IconPlus, IconChevronRight, IconCalendar } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
+import { PhotoUploadButton } from "@/components/forwarder/PhotoUploadButton";
 
 async function markReceivedUsa(formData: FormData) {
   "use server";
@@ -59,6 +60,15 @@ async function removeFromShipment(formData: FormData) {
   revalidatePath(`/forwarder/track/${tn}`);
   revalidatePath(`/forwarder/shipment/${id}`);
   revalidatePath("/forwarder");
+}
+
+async function uploadPhoto(formData: FormData) {
+  "use server";
+  const tn = String(formData.get("tn"));
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) throw new Error("uploadPhoto: empty file");
+  await uploadParcelPhoto(tn, file);
+  revalidatePath(`/forwarder/track/${tn}`);
 }
 
 export default async function TrackDetail({ params }: { params: Promise<{ tn: string }> }) {
@@ -237,15 +247,26 @@ export default async function TrackDetail({ params }: { params: Promise<{ tn: st
 
       <section className="card fade-up" style={{ padding: 18 }}>
         <div className="caption-up" style={{ marginBottom: 10 }}>Фото</div>
-        {parcel.photos.length === 0 ? (
-          <button className="btn btn-secondary btn-block" type="button" disabled>
-            <IconCamera width={18} height={18} /> Добавить фото (скоро)
-          </button>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-            {parcel.photos.map((url) => (<div key={url} style={{ aspectRatio: "1/1", background: "var(--slate-700)", borderRadius: 6 }} />))}
+        {parcel.photos.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 12 }}>
+            {parcel.photos.map((url) => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  aspectRatio: "1/1",
+                  background: `var(--slate-700) url(${JSON.stringify(url)}) center/cover no-repeat`,
+                  borderRadius: 6,
+                  display: "block",
+                }}
+                aria-label="Открыть фото"
+              />
+            ))}
           </div>
         )}
+        <PhotoUploadButton trackingNumber={parcel.trackingNumber} uploadAction={uploadPhoto} />
       </section>
 
       {parcel.notes && (

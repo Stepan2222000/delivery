@@ -414,6 +414,7 @@ label.field > .field-label {
 @media (max-width: 720px) {
   .top-nav { padding: 12px 16px; gap: 12px; }
   .top-nav .who .who-name { display: none; }
+  .top-nav .nav-links a.nav-link-hide-mobile { display: none; }
   .app-content { padding: 18px 16px 32px; }
 }
 
@@ -519,7 +520,6 @@ label.field > .field-label {
   gap: 14px;
   padding: 12px 16px;
   border-top: 1px solid var(--product-stroke);
-  text-decoration: none;
   color: inherit;
   transition: background-color 150ms ease-out;
 }
@@ -529,7 +529,25 @@ label.field > .field-label {
 .pl-row-late:hover { background: rgba(198,69,69,0.10); }
 .pl-row-late .pl-date { color: var(--error-text); }
 .pl-check { display: inline-flex; align-items: center; justify-content: center; }
-.pl-track { min-width: 0; }
+.pl-track {
+  min-width: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.pl-track-link {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--on-dark-strong);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  line-height: 1.3;
+}
+.pl-track-link:hover { color: var(--brand-coral); }
 .pl-date {
   color: var(--on-dark-soft);
   font-size: 13px;
@@ -537,7 +555,12 @@ label.field > .field-label {
   white-space: nowrap;
   font-family: var(--font-sans);
 }
-.pl-chevron { color: var(--on-dark-faint); display: inline-flex; align-items: center; }
+.pl-chevron {
+  color: var(--on-dark-faint);
+  display: inline-flex; align-items: center; justify-content: flex-end;
+  text-decoration: none;
+}
+.pl-chevron:hover { color: var(--on-dark-strong); }
 
 @media (max-width: 640px) {
   .pl-row {
@@ -552,7 +575,7 @@ label.field > .field-label {
   .pl-chevron { grid-column: 3; grid-row: 1 / span 3; align-self: center; }
   .pl-status  { grid-column: 2; grid-row: 2; justify-self: start; min-width: 0; overflow: hidden; }
   .pl-date    { grid-column: 2; grid-row: 3; justify-self: start; text-align: left; white-space: normal; font-size: 12px; }
-  .pl-row .track-no { font-size: 13.5px; }
+  .pl-track-link { font-size: 13.5px; }
   .pl-row .status-pill { max-width: 100%; }
 }
 

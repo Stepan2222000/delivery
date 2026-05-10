@@ -19,8 +19,8 @@ const TABS: { key: string; label: string; statuses: ParcelStatus[] }[] = [
   { key: "to_ru", label: "В РФ", statuses: ["in_shipment_kg_to_ru", "delivered_ru"] },
 ];
 
-export default async function ForwarderHome({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string }> }) {
-  const { tab = "usa", q = "" } = await searchParams;
+export default async function ForwarderHome({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; new?: string }> }) {
+  const { tab = "usa", q = "", new: justCreatedId } = await searchParams;
   const query = q.trim().toLowerCase();
   const active = TABS.find((t) => t.key === tab) ?? TABS[0];
 
@@ -105,19 +105,37 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
             <Link href="/forwarder/shipment/new" className="caption" style={{ color: "var(--brand-coral)" }}>+ ещё одну</Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
-            {drafts.map((d) => (
-              <Link key={d.id} href={`/forwarder/shipment/${d.id}`} className="card" style={{ padding: 16, display: "block" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                  <span className="title-sm" style={{ color: "var(--on-dark-strong)" }}>{d.transport ?? "Транспорт не указан"}</span>
-                  <span className="caption">{d.trackingNumbers.length} {d.trackingNumbers.length === 1 ? "трек" : "треков"}</span>
-                </div>
-                {d.plannedSentAt && (
-                  <div className="body-xs" style={{ color: "var(--on-dark-soft)", display: "flex", gap: 6, alignItems: "center", marginTop: 4 }}>
-                    <IconCalendar width={12} height={12} /> отправка {formatDate(d.plannedSentAt)}{d.plannedArrivalAt ? ` → приход ${formatDate(d.plannedArrivalAt)}` : ""}
+            {drafts.map((d) => {
+              const isNew = d.id === justCreatedId;
+              return (
+                <Link
+                  key={d.id}
+                  href={`/forwarder/shipment/${d.id}`}
+                  className="card"
+                  style={{
+                    padding: 16,
+                    display: "block",
+                    borderColor: isNew ? "var(--brand-coral)" : undefined,
+                    boxShadow: isNew ? "0 0 0 2px rgba(232,113,77,0.18)" : undefined,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                    <span className="title-sm" style={{ color: "var(--on-dark-strong)" }}>{d.transport ?? "Транспорт не указан"}</span>
+                    <span className="caption">{d.trackingNumbers.length} {d.trackingNumbers.length === 1 ? "трек" : "треков"}</span>
                   </div>
-                )}
-              </Link>
-            ))}
+                  {d.plannedSentAt && (
+                    <div className="body-xs" style={{ color: "var(--on-dark-soft)", display: "flex", gap: 6, alignItems: "center", marginTop: 4 }}>
+                      <IconCalendar width={12} height={12} /> отправка {formatDate(d.plannedSentAt)}{d.plannedArrivalAt ? ` → приход ${formatDate(d.plannedArrivalAt)}` : ""}
+                    </div>
+                  )}
+                  {isNew && (
+                    <div className="caption" style={{ marginTop: 8, color: "var(--brand-coral)" }}>
+                      только что создана — нажмите, чтобы добавить треки
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Parcel, Settings } from "@/lib/types";
 import { StatusPill } from "@/components/shared/StatusPill";
-import { CopyTrack } from "@/components/shared/CopyTrack";
+import { CopyButton } from "@/components/shared/CopyButton";
 import { formatDate, formatRelative, isOverdue, overdueReason } from "@/lib/derive";
 import { IconChevronRight } from "@/components/shared/Icons";
 import { RowCheckbox } from "@/components/shared/Selection";
@@ -28,16 +28,19 @@ export function ParcelsList({ parcels, settings, today }: { parcels: Parcel[]; s
         const late = isOverdue(p, settings, today);
         return (
           <div key={p.trackingNumber} className={`pl-row ${late ? "pl-row-late" : ""}`}>
-            <div className="pl-check"><RowCheckbox id={p.trackingNumber} ariaLabel={p.trackingNumber} /></div>
-            <Link
-              href={`/forwarder/track/${p.trackingNumber}`}
-              className="pl-row-inner"
-              style={{ display: "contents" }}
-            >
-              <div className="pl-track"><CopyTrack value={p.trackingNumber} truncate /></div>
-              <div className="pl-status"><StatusPill status={p.status} /></div>
-              <div className="pl-date">{rowSubtitle(p, late, today)}</div>
-              <div className="pl-chevron"><IconChevronRight width={18} height={18} /></div>
+            <div className="pl-check">
+              <RowCheckbox id={p.trackingNumber} ariaLabel={p.trackingNumber} />
+            </div>
+            <div className="pl-track">
+              <Link href={`/forwarder/track/${p.trackingNumber}`} className="pl-track-link" title="Открыть трек">
+                {p.trackingNumber}
+              </Link>
+              <CopyButton value={p.trackingNumber} ariaLabel="Скопировать трек-номер" />
+            </div>
+            <div className="pl-status"><StatusPill status={p.status} /></div>
+            <div className="pl-date">{rowSubtitle(p, late, today)}</div>
+            <Link href={`/forwarder/track/${p.trackingNumber}`} className="pl-chevron" aria-label="Открыть трек">
+              <IconChevronRight width={18} height={18} />
             </Link>
           </div>
         );

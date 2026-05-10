@@ -27,7 +27,7 @@ export default async function ForwarderLayout({ children }: { children: ReactNod
         </Link>
         <nav className="nav-links" aria-label="Главное меню">
           <NavLink href="/forwarder" exact>Треки</NavLink>
-          <NavLink href="/forwarder/shipment/new">Новая отгрузка</NavLink>
+          <NavLink href="/forwarder/shipment/new" className="nav-link-hide-mobile">Новая отгрузка</NavLink>
         </nav>
         <SearchBar placeholder="Поиск по треку" />
         <div className="who">

@@ -26,7 +26,7 @@ async function createDraftShipment(formData: FormData) {
     await uploadShipmentWaybill(sh.id, photoFile);
   }
   revalidatePath("/forwarder");
-  redirect(`/forwarder/shipment/${sh.id}`);
+  redirect(`/forwarder?new=${sh.id}`);
 }
 
 export default function NewShipment() {
