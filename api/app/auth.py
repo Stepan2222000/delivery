@@ -1,8 +1,6 @@
-"""Cookie-based session auth with plaintext-password compare from env.
-
-Two logical accounts (admin + forwarder), credentials in env. Sessions persisted in
-the `sessions` table. Cookie carries only the session UUID. TTL is rolling: every
-authenticated request bumps last_seen_at and pushes expires_at forward.
+"""Cookie-based session auth. Credentials live in `accounts.py`. Sessions
+are persisted in the `sessions` table; the cookie carries only the session
+UUID. TTL is rolling — each request slides expires_at forward.
 """
 from __future__ import annotations
 
@@ -11,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import asyncpg
-from fastapi import Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import Depends, HTTPException, Request, Response, status
 
 from .accounts import ACCOUNTS, Role
 from .config import settings
@@ -77,7 +75,6 @@ class CurrentUser:
 async def get_current_user(
     request: Request,
     response: Response,
-    session_cookie: str | None = Cookie(default=None, alias=None),
 ) -> CurrentUser:
     raw = request.cookies.get(settings.cookie_name)
     if not raw:

@@ -1,40 +1,18 @@
--- ───────────────────────────────────────────────────────────────────────────
--- 004_fdw_parcels_aggregate.sql — collapse multi-order trackings via aggregate.
+-- 004_fdw_parcels_aggregate.sql — one physical parcel can carry several eBay
+-- orders sharing the same tracking number (7 such cases in prod, up to 4
+-- orders each). Aggregate per tracking_number so the VIEW returns one row
+-- per parcel. `single_or_raise` fails loudly if a tracking ever spans two
+-- sellers — better than silently picking one.
 --
--- One physical parcel can carry several eBay orders sharing the same tracking
--- number (currently 7 such cases in prod, up to 4 orders per tracking). The
--- previous VIEW (003) used DISTINCT ON to pick a single order per tracking,
--- which silently hid the other orders. This migration replaces that with
--- proper aggregation per tracking_number:
---
---   item_title       : STRING_AGG(DISTINCT, ' · ')   — show all titles
---   sold_by          : single_or_raise()             — must be one seller,
---                                                      else SQL exception
---   order_total_usd  : SUM                           — total = sum of orders
---   arrived_usa_at   : MAX(delivered_date)           — parcel ready when ALL
---                                                      its orders delivered
---
--- The single_or_raise aggregate trips a 22000 SQLSTATE error if two non-null
--- values disagree. Currently no tracking has multiple sellers, but if the eBay
--- parser ever produces such a record we want a loud failure rather than
--- showing a misleading "first" seller.
---
--- Performance: GROUP BY with a PL/pgSQL aggregate doesn't push down to the
--- foreign server — postgres_fdw fetches all matching rows and aggregates
--- locally. At ~200 orders this is ~2ms (measured EXPLAIN ANALYZE). If the
--- order count grows past a few thousand, revisit and either materialise the
--- aggregation or move it to a remote view.
--- ───────────────────────────────────────────────────────────────────────────
+-- GROUP BY with a PL/pgSQL aggregate is not pushed down by postgres_fdw —
+-- all matching rows come back and aggregate locally. ~2ms at current scale;
+-- revisit past a few thousand orders.
 
 BEGIN;
 
--- Drop the trigger and view from 003 first — we replace both.
 DROP TRIGGER IF EXISTS parcels_iud ON parcels;
 DROP VIEW IF EXISTS parcels;
 
--- ── single_or_raise aggregate ──────────────────────────────────────────────
--- State transition: returns the new value if state is null, the existing state
--- if values agree, raises otherwise. Nulls are ignored.
 CREATE OR REPLACE FUNCTION _single_or_raise_sfunc(state text, value text)
 RETURNS text AS $$
 BEGIN
@@ -44,7 +22,7 @@ BEGIN
     RAISE EXCEPTION 'single_or_raise: conflicting values "%" vs "%"', state, value
         USING ERRCODE = 'data_exception';
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql;
 
 DROP AGGREGATE IF EXISTS single_or_raise(text);
 CREATE AGGREGATE single_or_raise(text) (
@@ -52,10 +30,6 @@ CREATE AGGREGATE single_or_raise(text) (
     STYPE = text
 );
 
--- ── parcels VIEW with per-tracking aggregation ────────────────────────────
--- agg CTE collapses (order_tracking_numbers ⨝ orders ⨝ order_items) into
--- exactly one row per tracking_number. The outer SELECT joins parcels_mutations
--- (left side, owns the tracking_number set) with agg.
 CREATE VIEW parcels AS
 WITH agg AS (
     SELECT
@@ -94,50 +68,7 @@ SELECT
 FROM parcels_mutations pm
 LEFT JOIN agg ON agg.tracking_number = pm.tracking_number;
 
--- ── INSTEAD OF trigger (re-create from 003 verbatim) ──────────────────────
--- Lets old SQL like "UPDATE parcels SET notes='...'" still work; new code
--- targets parcels_mutations directly.
-CREATE OR REPLACE FUNCTION parcels_mutations_upsert() RETURNS trigger AS $$
-BEGIN
-    IF TG_OP = 'INSERT' THEN
-        INSERT INTO parcels_mutations (
-            tracking_number, status, problem, ordered_at, eta_usa,
-            received_usa_at, shipment_usa_to_kg_id, arrived_kg_at, weight_kg,
-            shipment_kg_to_ru_id, delivered_ru_at, notes,
-            source_order_number, shipping_cost_usd_snapshot, tariff_snapshot_usd_per_kg
-        ) VALUES (
-            NEW.tracking_number, COALESCE(NEW.status, 'ordered'::parcel_status),
-            NEW.problem, NEW.ordered_at, NEW.eta_usa,
-            NEW.received_usa_at, NEW.shipment_usa_to_kg_id, NEW.arrived_kg_at, NEW.weight_kg,
-            NEW.shipment_kg_to_ru_id, NEW.delivered_ru_at, NEW.notes,
-            NEW.source_order_number, NEW.shipping_cost_usd_snapshot, NEW.tariff_snapshot_usd_per_kg
-        );
-        RETURN NEW;
-    ELSIF TG_OP = 'UPDATE' THEN
-        UPDATE parcels_mutations SET
-            status = NEW.status,
-            problem = NEW.problem,
-            ordered_at = NEW.ordered_at,
-            eta_usa = NEW.eta_usa,
-            received_usa_at = NEW.received_usa_at,
-            shipment_usa_to_kg_id = NEW.shipment_usa_to_kg_id,
-            arrived_kg_at = NEW.arrived_kg_at,
-            weight_kg = NEW.weight_kg,
-            shipment_kg_to_ru_id = NEW.shipment_kg_to_ru_id,
-            delivered_ru_at = NEW.delivered_ru_at,
-            notes = NEW.notes,
-            shipping_cost_usd_snapshot = NEW.shipping_cost_usd_snapshot,
-            tariff_snapshot_usd_per_kg = NEW.tariff_snapshot_usd_per_kg,
-            updated_at = now()
-        WHERE tracking_number = OLD.tracking_number;
-        RETURN NEW;
-    ELSIF TG_OP = 'DELETE' THEN
-        DELETE FROM parcels_mutations WHERE tracking_number = OLD.tracking_number;
-        RETURN OLD;
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Re-attach the INSTEAD OF trigger; the function from 003 survives DROP VIEW.
 CREATE TRIGGER parcels_iud
     INSTEAD OF INSERT OR UPDATE OR DELETE ON parcels
     FOR EACH ROW EXECUTE FUNCTION parcels_mutations_upsert();

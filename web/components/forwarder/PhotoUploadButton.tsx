@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconCamera } from "@/components/shared/Icons";
 
@@ -9,7 +9,7 @@ const MAX_BYTES = 20 * 1024 * 1024;
 export function PhotoUploadButton({ trackingNumber }: { trackingNumber: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pending, startTransition] = useTransition();
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,6 +26,7 @@ export function PhotoUploadButton({ trackingNumber }: { trackingNumber: string }
     const fd = new FormData();
     fd.append("file", f);
 
+    setUploading(true);
     try {
       const res = await fetch(
         `/api/parcels/${encodeURIComponent(trackingNumber)}/photos`,
@@ -35,9 +36,11 @@ export function PhotoUploadButton({ trackingNumber }: { trackingNumber: string }
         const detail = await res.text().catch(() => res.statusText);
         throw new Error(`[${res.status}] ${detail}`);
       }
-      startTransition(() => router.refresh());
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ошибка загрузки");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -53,10 +56,10 @@ export function PhotoUploadButton({ trackingNumber }: { trackingNumber: string }
       <button
         type="button"
         className="btn btn-secondary btn-block"
-        disabled={pending}
+        disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >
-        <IconCamera width={18} height={18} /> {pending ? "Загружаю…" : "Добавить фото"}
+        <IconCamera width={18} height={18} /> {uploading ? "Загружаю…" : "Добавить фото"}
       </button>
       {error && (
         <p className="body-xs" style={{ color: "var(--error-text)", marginTop: 8 }}>

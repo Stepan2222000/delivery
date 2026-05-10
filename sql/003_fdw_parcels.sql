@@ -1,48 +1,19 @@
--- ───────────────────────────────────────────────────────────────────────────
--- 003_fdw_parcels.sql — switch parcels from local-duplicated to FDW-backed VIEW.
---
--- Before this migration: parcels was a local table that duplicated 5 columns
--- from ebay_remote.orders (sold_by, item_title, order_total_usd, eta_usa,
--- arrived_usa_at). A sync worker UPDATEd them every 5 minutes — drift &
--- complexity for ~5 columns that almost never change after the order is paid.
---
--- After this migration:
---   - parcels_mutations  = our own fields only (status, weight, dates we own,
---                          shipment FKs, snapshots, notes, source_order_number,
---                          parsed eta_usa cache).
---   - parcels (VIEW)     = LEFT JOIN parcels_mutations ⨝ ebay_remote.* via FDW.
---                          API/sync see the same 19-column shape as before.
---
--- Run-once. Foreign tables and ebay_server are assumed to exist (002_fdw.sql).
--- Requires:
---   ALTER SERVER ebay_server OPTIONS (ADD use_remote_estimate 'true');
--- which was already applied to prod.
--- ───────────────────────────────────────────────────────────────────────────
+-- 003_fdw_parcels.sql — switch parcels to FDW-backed VIEW. Run-once.
+-- Requires `ALTER SERVER ebay_server OPTIONS (ADD use_remote_estimate 'true')`
+-- (already applied to prod) for FDW pushdown to work.
+-- Note: this VIEW is superseded by 004 (per-tracking aggregation).
 
 BEGIN;
 
--- 1. Rename existing table — its rows already have all data we need.
 ALTER TABLE parcels RENAME TO parcels_mutations;
 
--- 2. Drop columns that now come from ebay_remote via the VIEW.
---    sold_by / item_title / order_total_usd / arrived_usa_at — pure projection.
---    eta_usa stays: parsed once from arriving_by_date string by the sync worker
---    (parser is not pushdown-friendly and arriving_by_date doesn't change after
---    the order is created).
+-- eta_usa stays local: arriving_by_date is a free-form string parsed in Python
+-- and the parser isn't pushdown-friendly.
 ALTER TABLE parcels_mutations DROP COLUMN sold_by;
 ALTER TABLE parcels_mutations DROP COLUMN item_title;
 ALTER TABLE parcels_mutations DROP COLUMN order_total_usd;
 ALTER TABLE parcels_mutations DROP COLUMN arrived_usa_at;
 
--- 3. Index on source_order_number stays — used by VIEW JOIN.
---    parcels_mutations_pkey covers tracking_number lookups.
-
--- 4. The VIEW reproduces the old parcels shape exactly so API code is unchanged.
---    Pattern: simple INNER JOIN on the FDW; pushdown handles the heavy lifting.
---    LEFT JOIN to order_items so a missing item doesn't drop the parcel row.
---    DISTINCT ON via subquery — postgres_fdw on PG18 pushes ROW_NUMBER-style
---    aggregations down only sometimes, so we materialise the first item via a
---    subquery; for ~200 orders this is irrelevant, for 10k+ may need rework.
 CREATE OR REPLACE VIEW parcels AS
 SELECT
     pm.tracking_number,
@@ -75,10 +46,8 @@ LEFT JOIN ebay_remote.order_tracking_numbers t
 LEFT JOIN ebay_remote.orders o
        ON o.order_id = t.order_id;
 
--- 5. INSTEAD OF triggers for INSERT/UPDATE/DELETE so existing API code that
---    writes to "parcels" routes through to parcels_mutations transparently.
---    Without this, FastAPI's UPDATE parcels SET status=... would fail (can't
---    update a join VIEW).
+-- INSTEAD OF triggers so legacy "UPDATE parcels SET ..." callers still work
+-- (the VIEW joins, which can't be updated directly).
 CREATE OR REPLACE FUNCTION parcels_mutations_upsert() RETURNS trigger AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN

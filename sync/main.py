@@ -1,17 +1,7 @@
-"""Sync worker: discover new tracking numbers in ebay_remote, register them.
-
-After the FDW migration (003_fdw_parcels.sql), most "syncing" is unnecessary:
-sold_by/item_title/order_total_usd/arrived_usa_at are read live from
-ebay_remote via the parcels VIEW. The only thing the worker still does is:
-
-  - Find tracking numbers present in ebay_remote.order_tracking_numbers
-    that have no row in parcels_mutations yet.
-  - Parse the human-readable arriving_by_date string into a timestamptz.
-  - INSERT a parcels_mutations row with status='ordered' (no random mocking;
-    that was a one-shot bootstrap done in earlier runs).
-
-Cancelled orders are skipped on first import. If the order gets cancelled
-later, the parcel keeps whatever status it has — manager handles by hand.
+"""Sync worker: insert parcels_mutations rows for tracking numbers newly
+seen in ebay_remote, with parsed eta_usa. All other source fields are read
+live through the parcels VIEW, so this loop is the only sync path needed.
+Cancelled orders are skipped on first import.
 """
 from __future__ import annotations
 
