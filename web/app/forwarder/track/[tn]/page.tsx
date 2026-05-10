@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getParcel, patchParcel, uploadParcelPhoto } from "@/lib/api/parcels";
+import { getParcel, patchParcel } from "@/lib/api/parcels";
 import { listShipments, addParcelToShipment, removeParcelFromShipment } from "@/lib/api/shipments";
 import { ApiError } from "@/lib/api/client";
 import { formatDate, formatDateFull, computeTimings } from "@/lib/derive";
@@ -60,15 +60,6 @@ async function removeFromShipment(formData: FormData) {
   revalidatePath(`/forwarder/track/${tn}`);
   revalidatePath(`/forwarder/shipment/${id}`);
   revalidatePath("/forwarder");
-}
-
-async function uploadPhoto(formData: FormData) {
-  "use server";
-  const tn = String(formData.get("tn"));
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) throw new Error("uploadPhoto: empty file");
-  await uploadParcelPhoto(tn, file);
-  revalidatePath(`/forwarder/track/${tn}`);
 }
 
 export default async function TrackDetail({ params }: { params: Promise<{ tn: string }> }) {
@@ -266,7 +257,7 @@ export default async function TrackDetail({ params }: { params: Promise<{ tn: st
             ))}
           </div>
         )}
-        <PhotoUploadButton trackingNumber={parcel.trackingNumber} uploadAction={uploadPhoto} />
+        <PhotoUploadButton trackingNumber={parcel.trackingNumber} />
       </section>
 
       {parcel.notes && (
