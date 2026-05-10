@@ -152,13 +152,25 @@ async def add_parcel(
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "shipment_not_found")
             if sh["status"] != "draft":
                 raise HTTPException(status.HTTP_409_CONFLICT, "not_draft")
+            parcel = await conn.fetchrow(
+                "SELECT status, shipment_kg_to_ru_id, shipment_usa_to_kg_id FROM parcels WHERE tracking_number = $1 FOR UPDATE",
+                body.tracking_number,
+            )
+            if parcel is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "parcel_not_found")
             col = "shipment_kg_to_ru_id" if sh["direction"] == "kg_to_ru" else "shipment_usa_to_kg_id"
-            updated = await conn.execute(
-                f"UPDATE parcels SET {col} = $2 WHERE tracking_number = $1 AND {col} IS NULL",
+            if parcel[col] is not None:
+                raise HTTPException(status.HTTP_409_CONFLICT, "parcel_already_in_shipment")
+            # Only `arrived_kg` parcels are eligible for KG→RU shipments.
+            if sh["direction"] == "kg_to_ru" and parcel["status"] != "arrived_kg":
+                raise HTTPException(
+                    status.HTTP_409_CONFLICT,
+                    f"parcel_must_be_in_kg:got_{parcel['status']}",
+                )
+            await conn.execute(
+                f"UPDATE parcels SET {col} = $2 WHERE tracking_number = $1",
                 body.tracking_number, sid,
             )
-            if updated.endswith(" 0"):
-                raise HTTPException(status.HTTP_409_CONFLICT, "parcel_already_in_shipment_or_missing")
     return await get_shipment(sid, request, user)
 
 

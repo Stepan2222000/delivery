@@ -1,4 +1,4 @@
-"""Cookie-based session auth with Argon2id password verification.
+"""Cookie-based session auth with plaintext-password compare from env.
 
 Two logical accounts (admin + forwarder), credentials in env. Sessions persisted in
 the `sessions` table. Cookie carries only the session UUID. TTL is rolling: every
@@ -6,48 +6,29 @@ authenticated request bumps last_seen_at and pushes expires_at forward.
 """
 from __future__ import annotations
 
+import hmac
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID
 
 import asyncpg
 from fastapi import Cookie, Depends, HTTPException, Request, Response, status
-from pwdlib import PasswordHash
 
 from .config import settings
 
 Role = Literal["admin", "forwarder"]
 
-_password_hash = PasswordHash.recommended()
-
-
-def _verify(password: str, hashed: str) -> bool:
-    try:
-        return _password_hash.verify(password, hashed)
-    except Exception:
-        return False
-
 
 def authenticate(login: str, password: str) -> tuple[str, Role] | None:
-    """Return (user_id, role) on success, None on failure. Constant-ish-time."""
+    """Return (user_id, role) on success, None on failure."""
     candidates: list[tuple[str, str, Role]] = [
-        (settings.admin_login,     settings.admin_password_hash,     "admin"),
-        (settings.forwarder_login, settings.forwarder_password_hash, "forwarder"),
+        (settings.admin_login,     settings.admin_password,     "admin"),
+        (settings.forwarder_login, settings.forwarder_password, "forwarder"),
     ]
-    matched_hash: str | None = None
-    matched: tuple[str, Role] | None = None
-    for cfg_login, cfg_hash, role in candidates:
-        if cfg_login == login:
-            matched_hash = cfg_hash
-            matched = (cfg_login, role)
-            break
-    # Hash-verify either real or dummy to keep timing roughly stable.
-    if matched_hash is None:
-        _verify(password, "$argon2id$v=19$m=65536,t=3,p=4$ZHVtbXlzYWx0$d3Jvbmd3cm9uZ3dyb25nd3Jvbmd3cm9uZw")
-        return None
-    if not _verify(password, matched_hash):
-        return None
-    return matched
+    for cfg_login, cfg_password, role in candidates:
+        if hmac.compare_digest(login, cfg_login) and hmac.compare_digest(password, cfg_password):
+            return (cfg_login, role)
+    return None
 
 
 async def create_session(

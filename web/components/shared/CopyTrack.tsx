@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function CopyTrack({ value, size, className }: { value: string; size?: "lg" | "xl"; className?: string }) {
+export function CopyTrack({ value, size, className, truncate }: { value: string; size?: "lg" | "xl"; className?: string; truncate?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   const onClick = async (e: React.MouseEvent) => {
@@ -16,11 +16,14 @@ export function CopyTrack({ value, size, className }: { value: string; size?: "l
   const sizeClass = size === "xl" ? "xl" : size === "lg" ? "lg" : "";
 
   return (
-    <span style={{ position: "relative", display: "inline-block", lineHeight: 1 }}>
+    <span
+      className={truncate ? "copy-track-wrap copy-track-wrap--trunc" : "copy-track-wrap"}
+      style={{ position: "relative", lineHeight: 1 }}
+    >
       <button
         type="button"
         onClick={onClick}
-        className={`copy-track-btn ${className ?? ""}`}
+        className={`copy-track-btn ${truncate ? "copy-track-btn--trunc" : ""} ${className ?? ""}`}
         aria-label="Скопировать трек-номер"
         title="Кликните чтобы скопировать"
       >

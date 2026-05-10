@@ -3,6 +3,9 @@ import { listParcels } from "@/lib/api/parcels";
 import { listShipments } from "@/lib/api/shipments";
 import { getSettings } from "@/lib/api/settings";
 import { isOverdue, overdueReason, formatDate } from "@/lib/derive";
+import { SelectionProvider } from "@/components/shared/Selection";
+import { BulkActionBar } from "@/components/shared/BulkActionBar";
+import { ImportXlsxButton } from "@/components/shared/ImportXlsxButton";
 import { IconAlert, IconChevronRight } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
 import type { ParcelStatus } from "@/lib/types";
@@ -35,19 +38,23 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   // only the parcels table (which already filters by q internally).
   if (q) {
     return (
-      <div>
-        <header style={{ marginBottom: 24 }}>
-          <p className="caption-up" style={{ marginBottom: 8 }}>Поиск</p>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 36, letterSpacing: "-0.6px", fontWeight: 400, margin: 0 }}>
-            «{q}»
-          </h1>
-        </header>
-        <ParcelsTable parcels={parcels} q={q} filter={filter} settings={settings} today={today} />
-      </div>
+      <SelectionProvider>
+        <div>
+          <header style={{ marginBottom: 24 }}>
+            <p className="caption-up" style={{ marginBottom: 8 }}>Поиск</p>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 36, letterSpacing: "-0.6px", fontWeight: 400, margin: 0 }}>
+              «{q}»
+            </h1>
+          </header>
+          <ParcelsTable parcels={parcels} q={q} filter={filter} settings={settings} today={today} />
+          <BulkActionBar role="admin" />
+        </div>
+      </SelectionProvider>
     );
   }
 
   return (
+    <SelectionProvider>
     <div>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -78,6 +85,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
           ))}
         </section>
       )}
+
+      <section style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 20 }}>
+        <ImportXlsxButton />
+      </section>
 
       <section className="stat-grid" style={{ marginBottom: 20 }}>
         {STAGE_GROUPS.map((g) => {
@@ -133,8 +144,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       </section>
 
       <ParcelsTable parcels={parcels} q={q} filter={filter} settings={settings} today={today} />
+      <BulkActionBar role="admin" />
 
       <style>{`@media (max-width: 900px) { .dash-row { grid-template-columns: 1fr !important; } }`}</style>
     </div>
+    </SelectionProvider>
   );
 }

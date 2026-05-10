@@ -3,6 +3,10 @@ import { listParcels } from "@/lib/api/parcels";
 import { listShipments } from "@/lib/api/shipments";
 import { getSettings } from "@/lib/api/settings";
 import { isOverdue, overdueReason, formatDate } from "@/lib/derive";
+import { SelectionProvider } from "@/components/shared/Selection";
+import { BulkActionBar } from "@/components/shared/BulkActionBar";
+import { ImportXlsxButton } from "@/components/shared/ImportXlsxButton";
+import { SelectAllToolbar } from "@/components/shared/SelectAllToolbar";
 import { ParcelsList } from "@/components/forwarder/ParcelsList";
 import { IconAlert, IconChevronRight, IconTruck, IconCalendar } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
@@ -35,7 +39,7 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
   if (query) {
     const results = visible.filter(filterByQ);
     return (
-      <>
+      <SelectionProvider>
         <header style={{ marginBottom: 24 }}>
           <p className="caption-up" style={{ marginBottom: 8 }}>Поиск</p>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 32, letterSpacing: "-0.5px", fontWeight: 400, margin: 0 }}>
@@ -47,9 +51,13 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
             <p className="body-md" style={{ margin: 0 }}>Ничего не нашлось.</p>
           </div>
         ) : (
-          <ParcelsList parcels={results} settings={settings} today={today} />
+          <>
+            <SelectAllToolbar ids={results.map((p) => p.trackingNumber)} label={`найдено ${results.length}`} />
+            <ParcelsList parcels={results} settings={settings} today={today} />
+          </>
         )}
-      </>
+        <BulkActionBar role="forwarder" openDrafts={drafts.map((d) => ({ id: d.id, transport: d.transport, trackCount: d.trackingNumbers.length }))} />
+      </SelectionProvider>
     );
   }
 
@@ -57,17 +65,12 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
   const counts = Object.fromEntries(TABS.map((t) => [t.key, visible.filter((p) => t.statuses.includes(p.status)).length]));
 
   return (
-    <>
-      <header style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-        <div>
-          <p className="caption-up" style={{ marginBottom: 8 }}>9 мая 2026 · сегодня</p>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 40, letterSpacing: "-0.6px", fontWeight: 400, margin: 0, lineHeight: 1 }}>
-            Треки.
-          </h1>
-        </div>
-        <Link href="/forwarder/shipment/new" className="btn btn-primary">
-          <IconTruck width={18} height={18} /> Новая отгрузка
-        </Link>
+    <SelectionProvider>
+      <header style={{ marginBottom: 24 }}>
+        <p className="caption-up" style={{ marginBottom: 8 }}>9 мая 2026 · сегодня</p>
+        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 40, letterSpacing: "-0.6px", fontWeight: 400, margin: 0, lineHeight: 1 }}>
+          Треки.
+        </h1>
       </header>
 
       {overdue.length > 0 && (
@@ -87,6 +90,13 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
           ))}
         </section>
       )}
+
+      <section style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 22 }}>
+        <ImportXlsxButton />
+        <Link href="/forwarder/shipment/new" className="btn btn-primary">
+          <IconTruck width={18} height={18} /> Новая отгрузка
+        </Link>
+      </section>
 
       {drafts.length > 0 && (
         <section className="fade-up" style={{ marginBottom: 22 }}>
@@ -125,8 +135,12 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
           <p className="body-md" style={{ margin: 0 }}>В этой вкладке пока пусто.</p>
         </div>
       ) : (
-        <ParcelsList parcels={inTab} settings={settings} today={today} />
+        <>
+          <SelectAllToolbar ids={inTab.map((p) => p.trackingNumber)} label={`всего ${inTab.length}`} />
+          <ParcelsList parcels={inTab} settings={settings} today={today} />
+        </>
       )}
-    </>
+      <BulkActionBar role="forwarder" openDrafts={drafts.map((d) => ({ id: d.id, transport: d.transport, trackCount: d.trackingNumbers.length }))} />
+    </SelectionProvider>
   );
 }

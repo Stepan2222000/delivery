@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { CopyTrack } from "@/components/shared/CopyTrack";
+import { CopyButton } from "@/components/shared/CopyButton";
 import { IconPlus, IconSearch } from "@/components/shared/Icons";
 import type { Parcel } from "@/lib/types";
 
@@ -40,16 +41,34 @@ export function AvailableParcelsList({
               key={p.trackingNumber}
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr auto auto",
-                gap: 12,
+                gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+                gap: 8,
                 alignItems: "center",
                 padding: "10px 0",
                 borderTop: "1px solid var(--product-stroke)",
+                minWidth: 0,
               }}
             >
-              <CopyTrack value={p.trackingNumber} />
-              <span className="body-sm muted">{p.weightKg ?? "?"} кг</span>
-              <form action={addAction}>
+              <Link
+                href={`/forwarder/track/${p.trackingNumber}`}
+                style={{
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  color: "var(--on-dark-strong)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 14,
+                  textDecoration: "none",
+                  display: "block",
+                }}
+                title="Открыть трек"
+              >
+                {p.trackingNumber}
+              </Link>
+              <CopyButton value={p.trackingNumber} ariaLabel="Скопировать трек" />
+              <span className="body-sm muted" style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{p.weightKg ?? "?"} кг</span>
+              <form action={addAction} style={{ flexShrink: 0 }}>
                 <input type="hidden" name="id" value={shipmentId} />
                 <input type="hidden" name="tn" value={p.trackingNumber} />
                 <button className="btn btn-secondary btn-sm" type="submit">

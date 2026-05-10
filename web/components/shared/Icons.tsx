@@ -86,3 +86,6 @@ export const IconPin = (p: SVGProps<SVGSVGElement>) => (
 export const IconCalendar = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base} {...p}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 );
+export const IconCopy = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base} {...p}><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+);

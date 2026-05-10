@@ -4,6 +4,7 @@ import { StatusPill } from "@/components/shared/StatusPill";
 import { CopyTrack } from "@/components/shared/CopyTrack";
 import { formatDate, formatRelative, isOverdue, overdueReason } from "@/lib/derive";
 import { IconChevronRight } from "@/components/shared/Icons";
+import { RowCheckbox } from "@/components/shared/Selection";
 
 function rowSubtitle(p: Parcel, late: boolean, today: string): string {
   if (late) return overdueReason(p);
@@ -26,16 +27,19 @@ export function ParcelsList({ parcels, settings, today }: { parcels: Parcel[]; s
       {parcels.map((p) => {
         const late = isOverdue(p, settings, today);
         return (
-          <Link
-            key={p.trackingNumber}
-            href={`/forwarder/track/${p.trackingNumber}`}
-            className={`pl-row ${late ? "pl-row-late" : ""}`}
-          >
-            <div className="pl-track"><CopyTrack value={p.trackingNumber} /></div>
-            <div className="pl-status"><StatusPill status={p.status} /></div>
-            <div className="pl-date">{rowSubtitle(p, late, today)}</div>
-            <div className="pl-chevron"><IconChevronRight width={18} height={18} /></div>
-          </Link>
+          <div key={p.trackingNumber} className={`pl-row ${late ? "pl-row-late" : ""}`}>
+            <div className="pl-check"><RowCheckbox id={p.trackingNumber} ariaLabel={p.trackingNumber} /></div>
+            <Link
+              href={`/forwarder/track/${p.trackingNumber}`}
+              className="pl-row-inner"
+              style={{ display: "contents" }}
+            >
+              <div className="pl-track"><CopyTrack value={p.trackingNumber} truncate /></div>
+              <div className="pl-status"><StatusPill status={p.status} /></div>
+              <div className="pl-date">{rowSubtitle(p, late, today)}</div>
+              <div className="pl-chevron"><IconChevronRight width={18} height={18} /></div>
+            </Link>
+          </div>
         );
       })}
     </div>

@@ -514,10 +514,10 @@ label.field > .field-label {
 }
 .pl-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(140px, auto) 18px;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(120px, auto) 18px;
   align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
+  gap: 14px;
+  padding: 12px 16px;
   border-top: 1px solid var(--product-stroke);
   text-decoration: none;
   color: inherit;
@@ -528,6 +528,7 @@ label.field > .field-label {
 .pl-row-late { background: rgba(198,69,69,0.05); }
 .pl-row-late:hover { background: rgba(198,69,69,0.10); }
 .pl-row-late .pl-date { color: var(--error-text); }
+.pl-check { display: inline-flex; align-items: center; justify-content: center; }
 .pl-track { min-width: 0; }
 .pl-date {
   color: var(--on-dark-soft);
@@ -540,22 +541,26 @@ label.field > .field-label {
 
 @media (max-width: 640px) {
   .pl-row {
-    grid-template-columns: minmax(0, 1fr) 18px;
-    grid-template-rows: auto auto;
-    column-gap: 12px;
-    row-gap: 6px;
-    padding: 14px 14px;
+    grid-template-columns: auto minmax(0, 1fr) 18px;
+    grid-template-rows: auto auto auto;
+    column-gap: 10px;
+    row-gap: 4px;
+    padding: 10px 12px;
   }
-  .pl-track   { grid-column: 1; grid-row: 1; }
-  .pl-chevron { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
-  .pl-status  { grid-column: 1; grid-row: 2; justify-self: start; }
-  .pl-date    { grid-column: 1; grid-row: 2; justify-self: end; }
+  .pl-check   { grid-column: 1; grid-row: 1 / span 3; align-self: center; }
+  .pl-track   { grid-column: 2; grid-row: 1; min-width: 0; }
+  .pl-chevron { grid-column: 3; grid-row: 1 / span 3; align-self: center; }
+  .pl-status  { grid-column: 2; grid-row: 2; justify-self: start; min-width: 0; overflow: hidden; }
+  .pl-date    { grid-column: 2; grid-row: 3; justify-self: start; text-align: left; white-space: normal; font-size: 12px; }
   .pl-row .track-no { font-size: 13.5px; }
+  .pl-row .status-pill { max-width: 100%; }
 }
 
 /* ============================================================
    Copyable tracking number — click to copy, brief toast above
    ============================================================ */
+.copy-track-wrap { display: inline-block; max-width: 100%; }
+.copy-track-wrap.copy-track-wrap--trunc { display: block; min-width: 0; max-width: 100%; }
 .copy-track-btn {
   background: transparent;
   border: 0;
@@ -567,6 +572,15 @@ label.field > .field-label {
   text-align: left;
   display: inline-block;
   line-height: 1;
+  max-width: 100%;
+}
+.copy-track-btn.copy-track-btn--trunc { display: block; min-width: 0; }
+.copy-track-btn.copy-track-btn--trunc .track-no {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
 }
 .copy-track-btn:hover { opacity: 0.85; }
 .copy-track-btn:focus-visible { outline: 2px solid var(--brand-coral); outline-offset: 2px; border-radius: 4px; }

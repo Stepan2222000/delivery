@@ -10,15 +10,18 @@ import {
   deleteDraftShipment,
   uploadShipmentWaybill,
 } from "@/lib/api/shipments";
-import { listParcels } from "@/lib/api/parcels";
+import { listParcels, patchParcel } from "@/lib/api/parcels";
 import { ApiError } from "@/lib/api/client";
 import { formatDate } from "@/lib/derive";
 import {
   IconArrowLeft, IconTrash, IconSend, IconCalendar, IconTruck, IconCamera,
 } from "@/components/shared/Icons";
 import { TransportSelect } from "@/components/shared/TransportSelect";
-import { CopyTrack } from "@/components/shared/CopyTrack";
+import { CopyButton } from "@/components/shared/CopyButton";
+import { InlineWeightInput } from "@/components/shared/InlineWeightInput";
+import { Toast } from "@/components/shared/Toast";
 import { AvailableParcelsList } from "@/components/forwarder/AvailableParcelsList";
+import { ShipmentXlsxButtons } from "@/components/shared/ShipmentXlsxButtons";
 
 function parseDate(s: string): string | null {
   const t = s.trim();
@@ -26,19 +29,29 @@ function parseDate(s: string): string | null {
   return new Date(t + "T08:00:00Z").toISOString();
 }
 
+function apiErrorRedirect(id: string, e: unknown): never {
+  const code = e instanceof ApiError ? `${e.status}:${e.detail}` : "unknown";
+  redirect(`/forwarder/shipment/${id}?error=${encodeURIComponent(code)}`);
+}
+
 async function saveDraft(formData: FormData) {
   "use server";
   const id = String(formData.get("id"));
-  await patchShipment(id, {
-    transport: String(formData.get("transport") ?? "").trim() || null,
-    plannedSentAt: parseDate(String(formData.get("planned_sent_at") ?? "")),
-    plannedArrivalAt: parseDate(String(formData.get("planned_arrival_at") ?? "")),
-    waybillNo: String(formData.get("waybill") ?? "").trim() || null,
-    notes: String(formData.get("notes") ?? "").trim() || null,
-  });
-  const photoFile = formData.get("waybill_photo");
-  if (photoFile instanceof File && photoFile.size > 0) {
-    await uploadShipmentWaybill(id, photoFile);
+  try {
+    await patchShipment(id, {
+      transport: String(formData.get("transport") ?? "").trim() || null,
+      plannedSentAt: parseDate(String(formData.get("planned_sent_at") ?? "")),
+      plannedArrivalAt: parseDate(String(formData.get("planned_arrival_at") ?? "")),
+      waybillNo: String(formData.get("waybill") ?? "").trim() || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    });
+    const photoFile = formData.get("waybill_photo");
+    if (photoFile instanceof File && photoFile.size > 0) {
+      await uploadShipmentWaybill(id, photoFile);
+    }
+  } catch (e) {
+    if (e instanceof ApiError) apiErrorRedirect(id, e);
+    throw e;
   }
   revalidatePath(`/forwarder/shipment/${id}`);
 }
@@ -47,7 +60,12 @@ async function addParcel(formData: FormData) {
   "use server";
   const id = String(formData.get("id"));
   const tn = String(formData.get("tn"));
-  await addParcelToShipment(id, tn);
+  try {
+    await addParcelToShipment(id, tn);
+  } catch (e) {
+    if (e instanceof ApiError) apiErrorRedirect(id, e);
+    throw e;
+  }
   revalidatePath(`/forwarder/shipment/${id}`);
   revalidatePath("/forwarder");
 }
@@ -56,7 +74,12 @@ async function removeParcel(formData: FormData) {
   "use server";
   const id = String(formData.get("id"));
   const tn = String(formData.get("tn"));
-  await removeParcelFromShipment(id, tn);
+  try {
+    await removeParcelFromShipment(id, tn);
+  } catch (e) {
+    if (e instanceof ApiError) apiErrorRedirect(id, e);
+    throw e;
+  }
   revalidatePath(`/forwarder/shipment/${id}`);
   revalidatePath("/forwarder");
 }
@@ -64,24 +87,67 @@ async function removeParcel(formData: FormData) {
 async function sendDraft(formData: FormData) {
   "use server";
   const id = String(formData.get("id"));
-  await sendShipment(id);
+  try {
+    await sendShipment(id);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409 && e.detail.startsWith("missing_weight:")) {
+      const tns = e.detail.slice("missing_weight:".length);
+      redirect(`/forwarder/shipment/${id}?missing=${encodeURIComponent(tns)}`);
+    }
+    if (e instanceof ApiError) apiErrorRedirect(id, e);
+    throw e;
+  }
   revalidatePath("/forwarder");
   revalidatePath("/admin");
   redirect("/forwarder?tab=to_ru");
 }
 
+async function updateWeight(formData: FormData) {
+  "use server";
+  const tn = String(formData.get("tn"));
+  const weightRaw = String(formData.get("weight") ?? "").trim();
+  const weight = Number(weightRaw);
+  if (!Number.isFinite(weight) || weight <= 0) return;
+  try {
+    await patchParcel(tn, { weightKg: weight });
+  } catch (e) {
+    if (e instanceof ApiError) {
+      // Best-effort revalidate so UI doesn't lie, but swallow API error here
+      // (input is local-state, retry is a re-blur). Logged to server console.
+      console.error("updateWeight failed:", e.status, e.detail);
+      return;
+    }
+    throw e;
+  }
+  revalidatePath("/forwarder/shipment/[id]", "page");
+  revalidatePath("/forwarder");
+  revalidatePath(`/forwarder/track/${tn}`);
+}
+
 async function dropDraft(formData: FormData) {
   "use server";
   const id = String(formData.get("id"));
-  await deleteDraftShipment(id);
+  try {
+    await deleteDraftShipment(id);
+  } catch (e) {
+    if (e instanceof ApiError) apiErrorRedirect(id, e);
+    throw e;
+  }
   revalidatePath("/forwarder");
   redirect("/forwarder");
 }
 
 const isoToInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : "");
 
-export default async function ShipmentDetail({ params }: { params: Promise<{ id: string }> }) {
+export default async function ShipmentDetail({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ missing?: string; error?: string }>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   let sh;
   try {
     sh = await getShipment(id);
@@ -96,9 +162,21 @@ export default async function ShipmentDetail({ params }: { params: Promise<{ id:
   const inDraft = allInDraft;
   const available = allAvailable.filter((p) => !p.shipmentKgToRuId);
   const isDraft = sh.status === "draft";
+  const missingSet = new Set(
+    (sp.missing ? sp.missing.split(",") : []).map((s) => s.trim()).filter(Boolean),
+  );
 
+  const missingTns = Array.from(missingSet);
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
+      {missingTns.length > 0 && (
+        <Toast
+          tone="error"
+          message={`Нельзя отправить: у ${missingTns.length} ${missingTns.length === 1 ? "трека" : "треков"} не указан вес`}
+          detail={`Введите вес прямо в строке трека и повторите отправку. Без веса: ${missingTns.join(", ")}`}
+        />
+      )}
+      {sp.error && <Toast tone="error" message={errorMessage(sp.error)} detail={errorDetail(sp.error)} />}
       <Link href="/forwarder" className="btn btn-ghost btn-sm" style={{ marginLeft: -8, marginBottom: 12 }}>
         <IconArrowLeft width={18} height={18} /> Назад
       </Link>
@@ -169,27 +247,82 @@ export default async function ShipmentDetail({ params }: { params: Promise<{ id:
       )}
 
       <section className="card fade-up" style={{ padding: 22, marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-          <h2 className="title-md" style={{ color: "var(--on-dark-strong)", margin: 0 }}>В этой отгрузке</h2>
-          <span className="caption">{inDraft.length} {inDraft.length === 1 ? "трек" : "треков"}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+            <h2 className="title-md" style={{ color: "var(--on-dark-strong)", margin: 0 }}>В этой отгрузке</h2>
+            <span className="caption">{inDraft.length} {inDraft.length === 1 ? "трек" : "треков"}</span>
+          </div>
+          <ShipmentXlsxButtons
+            trackingNumbers={inDraft.map((p) => p.trackingNumber)}
+            shipmentId={sh.id}
+            isDraft={isDraft}
+          />
         </div>
         {inDraft.length === 0 ? (
           <p className="body-sm muted" style={{ margin: 0 }}>Пока пусто. Добавьте треки из списка ниже или со страницы трека.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-            {inDraft.map((p) => (
-              <li key={p.trackingNumber} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 12, alignItems: "center", padding: "10px 0", borderTop: "1px solid var(--product-stroke)" }}>
-                <CopyTrack value={p.trackingNumber} />
-                <span className="body-sm muted">{p.weightKg ?? "?"} кг</span>
-                {isDraft && (
-                  <form action={removeParcel}>
-                    <input type="hidden" name="id" value={sh.id} />
-                    <input type="hidden" name="tn" value={p.trackingNumber} />
-                    <button className="btn btn-ghost btn-sm" type="submit" aria-label="Убрать"><IconTrash width={16} height={16} /></button>
-                  </form>
-                )}
-              </li>
-            ))}
+            {inDraft.map((p) => {
+              const flag = missingSet.has(p.trackingNumber);
+              return (
+                <li
+                  key={p.trackingNumber}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+                    gap: 8,
+                    alignItems: "center",
+                    padding: "10px 8px",
+                    borderTop: "1px solid var(--product-stroke)",
+                    background: flag ? "rgba(198,69,69,0.10)" : "transparent",
+                    borderRadius: flag ? 6 : 0,
+                    minWidth: 0,
+                  }}
+                >
+                  <Link
+                    href={`/forwarder/track/${p.trackingNumber}`}
+                    style={{
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      color: "var(--on-dark-strong)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 14,
+                      textDecoration: "none",
+                      display: "block",
+                    }}
+                    title="Открыть трек"
+                  >
+                    {p.trackingNumber}
+                  </Link>
+                  <CopyButton value={p.trackingNumber} ariaLabel="Скопировать трек" />
+                  {isDraft ? (
+                    <InlineWeightInput
+                      tn={p.trackingNumber}
+                      weight={p.weightKg}
+                      action={updateWeight}
+                      highlight={flag}
+                    />
+                  ) : (
+                    <span className="body-sm muted" style={{ whiteSpace: "nowrap" }}>
+                      {p.weightKg ?? "?"} кг
+                    </span>
+                  )}
+                  {isDraft ? (
+                    <form action={removeParcel}>
+                      <input type="hidden" name="id" value={sh.id} />
+                      <input type="hidden" name="tn" value={p.trackingNumber} />
+                      <button className="btn btn-ghost btn-sm" type="submit" aria-label="Убрать">
+                        <IconTrash width={16} height={16} />
+                      </button>
+                    </form>
+                  ) : (
+                    <span />
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -227,4 +360,26 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
       <span className="body-sm" style={{ color: "var(--on-dark-strong)" }}>{value}</span>
     </div>
   );
+}
+
+function errorMessage(code: string): string {
+  const detail = code.includes(":") ? code.slice(code.indexOf(":") + 1) : code;
+  if (detail === "empty_shipment") return "В отгрузке нет ни одного трека";
+  if (detail === "not_draft") return "Отгрузку уже отправили — изменения недоступны";
+  if (detail === "not_draft_or_not_found") return "Отгрузку уже отправили — изменения недоступны";
+  if (detail === "parcel_not_found") return "Трек не найден";
+  if (detail === "parcel_already_in_shipment") return "Трек уже в другой отгрузке";
+  if (detail.startsWith("parcel_must_be_in_kg:")) {
+    const got = detail.slice("parcel_must_be_in_kg:".length).replace("got_", "");
+    return `Трек ещё не в КГ (статус: ${got}). В отгрузку КГ→РФ можно добавить только треки со статусом «В КГ».`;
+  }
+  if (detail === "shipment_not_found") return "Отгрузка не найдена";
+  return "Не удалось выполнить действие";
+}
+
+function errorDetail(code: string): string | undefined {
+  if (code.startsWith("409:")) return "Сервер отказал в действии (код 409). Обновите страницу и попробуйте снова.";
+  if (code.startsWith("404:")) return undefined;
+  if (code === "unknown") return "Подробности в консоли сервера.";
+  return undefined;
 }

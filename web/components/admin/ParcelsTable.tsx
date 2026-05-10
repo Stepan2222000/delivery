@@ -3,6 +3,7 @@ import type { Parcel, ParcelStatus, Settings } from "@/lib/types";
 import { isOverdue, overdueReason, formatDate } from "@/lib/derive";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { CopyTrack } from "@/components/shared/CopyTrack";
+import { RowCheckbox, HeaderCheckbox } from "@/components/shared/Selection";
 
 const FILTERS: { key: string; label: string; statuses: ParcelStatus[] | "all" | "late" }[] = [
   { key: "all",          label: "Все",          statuses: "all" },
@@ -86,7 +87,8 @@ export function ParcelsTable({
         <p className="body-sm muted" style={{ margin: 0, padding: "24px 0", textAlign: "center" }}>Ничего не нашлось.</p>
       ) : (
         <div className="at-list">
-          <div className="at-row at-head">
+          <div className="at-row at-head" style={{ display: "grid", gridTemplateColumns: "auto 1fr 2fr 1fr 1fr 1fr" }}>
+            <div className="at-c"><HeaderCheckbox ids={rows.map((r) => r.trackingNumber)} /></div>
             <div className="at-c at-track caption">Трек</div>
             <div className="at-c at-item caption">Содержимое</div>
             <div className="at-c at-status caption">Статус</div>
@@ -97,21 +99,24 @@ export function ParcelsTable({
             const late = isOverdue(p, settings, today);
             const cost = p.adminOnly?.shippingCostUsdSnapshot ?? null;
             return (
-              <Link key={p.trackingNumber} href={`/admin/track/${p.trackingNumber}`} className={`at-row ${late ? "at-row-late" : ""}`}>
-                <div className="at-c at-track"><CopyTrack value={p.trackingNumber} /></div>
-                <div className="at-c at-item">
-                  <span className="body-sm muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{p.adminOnly?.itemTitle ?? ""}</span>
-                </div>
-                <div className="at-c at-status"><StatusPill status={p.status} /></div>
-                <div className="at-c at-date">
-                  <span className="body-sm" style={{ color: late ? "var(--error-text)" : "var(--on-dark-soft)", whiteSpace: "nowrap" }}>{rowDate(p, late)}</span>
-                </div>
-                <div className="at-c at-pay" style={{ textAlign: "right" }}>
-                  <span className="body-sm mono" style={{ color: cost ? "var(--on-dark-strong)" : "var(--on-dark-faint)", whiteSpace: "nowrap" }}>
-                    {cost ? `$${cost.toFixed(2)}` : "—"}
-                  </span>
-                </div>
-              </Link>
+              <div key={p.trackingNumber} className={`at-row ${late ? "at-row-late" : ""}`} style={{ display: "grid", gridTemplateColumns: "auto 1fr 2fr 1fr 1fr 1fr", alignItems: "center" }}>
+                <div className="at-c"><RowCheckbox id={p.trackingNumber} ariaLabel={p.trackingNumber} /></div>
+                <Link href={`/admin/track/${p.trackingNumber}`} style={{ display: "contents" }}>
+                  <div className="at-c at-track"><CopyTrack value={p.trackingNumber} /></div>
+                  <div className="at-c at-item">
+                    <span className="body-sm muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{p.adminOnly?.itemTitle ?? ""}</span>
+                  </div>
+                  <div className="at-c at-status"><StatusPill status={p.status} /></div>
+                  <div className="at-c at-date">
+                    <span className="body-sm" style={{ color: late ? "var(--error-text)" : "var(--on-dark-soft)", whiteSpace: "nowrap" }}>{rowDate(p, late)}</span>
+                  </div>
+                  <div className="at-c at-pay" style={{ textAlign: "right" }}>
+                    <span className="body-sm mono" style={{ color: cost ? "var(--on-dark-strong)" : "var(--on-dark-faint)", whiteSpace: "nowrap" }}>
+                      {cost ? `$${cost.toFixed(2)}` : "—"}
+                    </span>
+                  </div>
+                </Link>
+              </div>
             );
           })}
         </div>

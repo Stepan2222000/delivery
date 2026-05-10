@@ -23,12 +23,18 @@ ORDER: dict[str, int] = {
 }
 
 # Manual transitions a forwarder may apply (UI + xlsx import).
+# `arrived_usa` is set automatically by the eBay sync worker — forwarder
+# can never set it (UI dropdown filters it out, API rejects it).
+# `in_shipment_kg_to_ru` is set only as a side-effect of "send shipment" —
+# also unavailable to manual bulk action.
+# Forwarder may jump forward into received_usa / in_shipment_usa_to_kg / arrived_kg
+# from any earlier non-terminal state.
 FORWARDER_FORWARD: dict[ParcelStatus, set[ParcelStatus]] = {
-    "ordered":                    {"arrived_usa"},
-    "arrived_usa":                {"received_by_forwarder_usa", "arrived_kg"},
-    "received_by_forwarder_usa":  {"arrived_kg"},
-    "arrived_kg":                 set(),  # next move is via "send shipment"
+    "ordered":                    {"received_by_forwarder_usa", "in_shipment_usa_to_kg", "arrived_kg"},
+    "arrived_usa":                {"received_by_forwarder_usa", "in_shipment_usa_to_kg", "arrived_kg"},
+    "received_by_forwarder_usa":  {"in_shipment_usa_to_kg", "arrived_kg"},
     "in_shipment_usa_to_kg":      {"arrived_kg"},
+    "arrived_kg":                 set(),  # next move is via "send shipment"
     "in_shipment_kg_to_ru":       set(),  # final move is admin-side receive
     "delivered_ru":               set(),
     "not_received_ru":            set(),
