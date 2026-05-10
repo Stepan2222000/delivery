@@ -1,0 +1,111 @@
+name: build & deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: stepan2222000
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha_tag: ${{ steps.meta.outputs.sha_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute short SHA tag
+        id: meta
+        run: echo "sha_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Hub (for Build Cloud)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx (cloud)
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: cloud
+          endpoint: "${{ secrets.DOCKERHUB_USERNAME }}/builder1"
+
+      - name: Build & push api
+        uses: docker/build-push-action@v6
+        with:
+          # Repo root context: api/Dockerfile copies api/ + sql/.
+          context: .
+          file: ./api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-api:${{ steps.meta.outputs.sha_tag }}
+
+      - name: Build & push sync
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./sync/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-sync:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-sync:${{ steps.meta.outputs.sha_tag }}
+
+      - name: Build & push web
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-web:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-web:${{ steps.meta.outputs.sha_tag }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            cd /root/delivery_app
+            git fetch --quiet origin main
+            git reset --hard origin/main
+            docker compose pull
+            # Apply schema migrations via a throwaway psql container.
+            # 001_init.sql uses IF NOT EXISTS — safe to re-run.
+            # 002_fdw.sql is run-once (CREATE SERVER/SCHEMA/FOREIGN TABLE
+            # без IF NOT EXISTS), пропускается тут — применить вручную при
+            # первой настройке БД.
+            docker run --rm \
+              -e PGPASSWORD=Password123 \
+              -v "$PWD/sql:/sql:ro" \
+              postgres:18-alpine \
+              psql -h 2.26.53.128 -p 5408 -U admin -d delivery -f /sql/001_init.sql || true
+            docker compose up -d --remove-orphans
+            docker image prune -f
+            docker compose ps

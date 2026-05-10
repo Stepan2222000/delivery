@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+**/.env
+**/.env.*
+.git
+.github
+*.log
+screenshots/
+web/tsconfig.tsbuildinfo

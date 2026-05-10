@@ -1,0 +1,56 @@
+services:
+  api:
+    image: ghcr.io/stepan2222000/delivery-api:${IMAGE_TAG:-latest}
+    container_name: delivery_api
+    restart: unless-stopped
+    ports:
+      - "3301:8000"
+    environment:
+      DELIVERY_PG_DSN: postgresql://admin:Password123@2.26.53.128:5408/delivery
+      WEB_ORIGIN: http://2.26.53.128:3300
+      MINIO_ENDPOINT: 2.26.53.128:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: Password123
+      MINIO_SECURE: "false"
+      MINIO_BUCKET_PHOTOS: parts-photos
+      MINIO_PHOTO_PREFIX: delivery/parcels
+      MINIO_BUCKET_WAYBILLS: delivery-photos
+      MINIO_PUBLIC_BASE: http://2.26.53.128:9000
+      ADMIN_LOGIN: stepan
+      ADMIN_PASSWORD: Password123
+      FORWARDER_LOGIN: kg_team
+      FORWARDER_PASSWORD: KgTeam2026
+      COOKIE_NAME: delivery_session
+      SESSION_TTL_DAYS: "30"
+    networks:
+      - db_default
+
+  sync:
+    image: ghcr.io/stepan2222000/delivery-sync:${IMAGE_TAG:-latest}
+    container_name: delivery_sync
+    restart: unless-stopped
+    environment:
+      DELIVERY_PG_DSN: postgresql://admin:Password123@2.26.53.128:5408/delivery
+      SYNC_INTERVAL_MINUTES: "5"
+    networks:
+      - db_default
+    depends_on:
+      - api
+
+  web:
+    image: ghcr.io/stepan2222000/delivery-web:${IMAGE_TAG:-latest}
+    container_name: delivery_web
+    restart: unless-stopped
+    ports:
+      - "3300:3000"
+    environment:
+      DELIVERY_API_URL: http://delivery_api:8000
+      DELIVERY_COOKIE_NAME: delivery_session
+    depends_on:
+      - api
+    networks:
+      - db_default
+
+networks:
+  db_default:
+    external: true
