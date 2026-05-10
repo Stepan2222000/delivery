@@ -8,26 +8,20 @@ from __future__ import annotations
 
 import hmac
 from datetime import datetime, timedelta, timezone
-from typing import Literal
 from uuid import UUID
 
 import asyncpg
 from fastapi import Cookie, Depends, HTTPException, Request, Response, status
 
+from .accounts import ACCOUNTS, Role
 from .config import settings
-
-Role = Literal["admin", "forwarder"]
 
 
 def authenticate(login: str, password: str) -> tuple[str, Role] | None:
     """Return (user_id, role) on success, None on failure."""
-    candidates: list[tuple[str, str, Role]] = [
-        (settings.admin_login,     settings.admin_password,     "admin"),
-        (settings.forwarder_login, settings.forwarder_password, "forwarder"),
-    ]
-    for cfg_login, cfg_password, role in candidates:
-        if hmac.compare_digest(login, cfg_login) and hmac.compare_digest(password, cfg_password):
-            return (cfg_login, role)
+    for acc in ACCOUNTS:
+        if hmac.compare_digest(login, acc.login) and hmac.compare_digest(password, acc.password):
+            return (acc.user_id, acc.role)
     return None
 
 

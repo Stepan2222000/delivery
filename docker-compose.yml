@@ -16,10 +16,6 @@ services:
       MINIO_PHOTO_PREFIX: delivery/parcels
       MINIO_BUCKET_WAYBILLS: delivery-photos
       MINIO_PUBLIC_BASE: http://2.26.53.128:9000
-      ADMIN_LOGIN: stepan
-      ADMIN_PASSWORD: Password123
-      FORWARDER_LOGIN: kg_team
-      FORWARDER_PASSWORD: KgTeam2026
       COOKIE_NAME: delivery_session
       SESSION_TTL_DAYS: "30"
     networks:

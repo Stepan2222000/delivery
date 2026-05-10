@@ -133,7 +133,7 @@ async def patch_parcel(
     async with pool.acquire() as conn:
         async with conn.transaction():
             current = await conn.fetchrow(
-                "SELECT status FROM parcels WHERE tracking_number = $1 FOR UPDATE",
+                "SELECT status FROM parcels_mutations WHERE tracking_number = $1 FOR UPDATE",
                 tracking_number,
             )
             if current is None:
@@ -178,7 +178,7 @@ async def patch_parcel(
 
             args.append(tracking_number)
             await conn.execute(
-                f"UPDATE parcels SET {', '.join(sets)} WHERE tracking_number = ${len(args)}",
+                f"UPDATE parcels_mutations SET {', '.join(sets)} WHERE tracking_number = ${len(args)}",
                 *args,
             )
 

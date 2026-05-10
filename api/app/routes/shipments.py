@@ -153,7 +153,7 @@ async def add_parcel(
             if sh["status"] != "draft":
                 raise HTTPException(status.HTTP_409_CONFLICT, "not_draft")
             parcel = await conn.fetchrow(
-                "SELECT status, shipment_kg_to_ru_id, shipment_usa_to_kg_id FROM parcels WHERE tracking_number = $1 FOR UPDATE",
+                "SELECT status, shipment_kg_to_ru_id, shipment_usa_to_kg_id FROM parcels_mutations WHERE tracking_number = $1 FOR UPDATE",
                 body.tracking_number,
             )
             if parcel is None:
@@ -168,7 +168,7 @@ async def add_parcel(
                     f"parcel_must_be_in_kg:got_{parcel['status']}",
                 )
             await conn.execute(
-                f"UPDATE parcels SET {col} = $2 WHERE tracking_number = $1",
+                f"UPDATE parcels_mutations SET {col} = $2 WHERE tracking_number = $1",
                 body.tracking_number, sid,
             )
     return await get_shipment(sid, request, user)
@@ -190,7 +190,7 @@ async def remove_parcel(
                 raise HTTPException(status.HTTP_409_CONFLICT, "not_draft")
             col = "shipment_kg_to_ru_id" if sh["direction"] == "kg_to_ru" else "shipment_usa_to_kg_id"
             await conn.execute(
-                f"UPDATE parcels SET {col} = NULL WHERE tracking_number = $1 AND {col} = $2",
+                f"UPDATE parcels_mutations SET {col} = NULL WHERE tracking_number = $1 AND {col} = $2",
                 tn, sid,
             )
     return await get_shipment(sid, request, user)
@@ -209,7 +209,7 @@ async def delete_draft(
             if sh["status"] != "draft":
                 raise HTTPException(status.HTTP_409_CONFLICT, "not_draft")
             col = "shipment_kg_to_ru_id" if sh["direction"] == "kg_to_ru" else "shipment_usa_to_kg_id"
-            await conn.execute(f"UPDATE parcels SET {col} = NULL WHERE {col} = $1", sid)
+            await conn.execute(f"UPDATE parcels_mutations SET {col} = NULL WHERE {col} = $1", sid)
             await conn.execute("DELETE FROM shipments WHERE id = $1", sid)
 
 
@@ -254,7 +254,7 @@ async def send_shipment(
                 if sh["direction"] == "kg_to_ru":
                     await conn.execute(
                         """
-                        UPDATE parcels
+                        UPDATE parcels_mutations
                            SET status = 'in_shipment_kg_to_ru',
                                tariff_snapshot_usd_per_kg = $2,
                                shipping_cost_usd_snapshot = $3
@@ -264,7 +264,7 @@ async def send_shipment(
                     )
                 else:
                     await conn.execute(
-                        "UPDATE parcels SET status = 'in_shipment_usa_to_kg' WHERE tracking_number = $1",
+                        "UPDATE parcels_mutations SET status = 'in_shipment_usa_to_kg' WHERE tracking_number = $1",
                         tn,
                     )
                 await conn.execute(
@@ -300,7 +300,7 @@ async def receive_shipment(
                 problem = None if item.received else "lost"
                 await conn.execute(
                     """
-                    UPDATE parcels
+                    UPDATE parcels_mutations
                        SET status = $2::parcel_status,
                            delivered_ru_at = CASE WHEN $2 = 'delivered_ru' THEN $3 ELSE delivered_ru_at END,
                            problem = COALESCE($4::problem_flag, problem)

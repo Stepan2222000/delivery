@@ -14,10 +14,6 @@ class Settings(BaseSettings):
     minio_photo_prefix: str = "delivery/parcels"
     minio_public_base: str
 
-    admin_login: str
-    admin_password: str
-    forwarder_login: str
-    forwarder_password: str
     session_ttl_days: int = 30
     cookie_secure: bool = False
     cookie_name: str = "delivery_session"

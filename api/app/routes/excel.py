@@ -180,7 +180,7 @@ async def import_apply(
                     continue
                 args.append(it.tracking_number)
                 await conn.execute(
-                    f"UPDATE parcels SET {', '.join(sets)} WHERE tracking_number = ${len(args)}",
+                    f"UPDATE parcels_mutations SET {', '.join(sets)} WHERE tracking_number = ${len(args)}",
                     *args,
                 )
                 if prev_status is not None and prev_status != it.changes["status"]:

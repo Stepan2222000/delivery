@@ -1,25 +1,23 @@
-"""Sync worker: ebay_orders → delivery.parcels.
+"""Sync worker: discover new tracking numbers in ebay_remote, register them.
 
-Runs on a fixed interval. Idempotent: pulls the full set of orders ≥ cutoff
-from ebay_remote (FDW), upserts one parcel per (order, tracking_number) pair.
+After the FDW migration (003_fdw_parcels.sql), most "syncing" is unnecessary:
+sold_by/item_title/order_total_usd/arrived_usa_at are read live from
+ebay_remote via the parcels VIEW. The only thing the worker still does is:
 
-For UNINSERTED (new) parcels:
-  - status = 'ordered' if no delivered_date
-  - if delivered_date is set, randomly pick one of the downstream statuses to seed
-    the system with realistic data (per user's request: "по статусам раскидаем
-    рандомно ради моков, потом данные поменяю все").
+  - Find tracking numbers present in ebay_remote.order_tracking_numbers
+    that have no row in parcels_mutations yet.
+  - Parse the human-readable arriving_by_date string into a timestamptz.
+  - INSERT a parcels_mutations row with status='ordered' (no random mocking;
+    that was a one-shot bootstrap done in earlier runs).
 
-For EXISTING parcels:
-  - update only `sold_by`, `item_title`, `order_total_usd`, `eta_usa`,
-    `arrived_usa_at`. Never overwrite status/weight/shipment ids — those are owned
-    by the delivery system.
+Cancelled orders are skipped on first import. If the order gets cancelled
+later, the parcel keeps whatever status it has — manager handles by hand.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
-import random
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,118 +39,53 @@ log = logging.getLogger("sync")
 DSN = os.environ["DELIVERY_PG_DSN"]
 INTERVAL_MIN = int(os.environ.get("SYNC_INTERVAL_MINUTES", "5"))
 
-# Realistic distribution for already-delivered orders (random seed for moks).
-DOWNSTREAM_WEIGHTS = [
-    ("arrived_usa", 25),
-    ("received_by_forwarder_usa", 15),
-    ("arrived_kg", 25),
-    ("in_shipment_kg_to_ru", 15),
-    ("delivered_ru", 20),
-]
 
-
-def random_seeded_status() -> str:
-    pool = []
-    for s, w in DOWNSTREAM_WEIGHTS:
-        pool.extend([s] * w)
-    return random.choice(pool)
-
-
-SQL_FETCH = """
+SQL_FETCH_NEW = """
 SELECT
-    o.order_id,
     o.order_number,
-    o.sold_by,
     o.ordered_at,
-    o.order_total_usd,
     o.delivery_status,
     o.delivered_date,
     o.arriving_by_date,
-    o.is_untracked,
-    t.tracking_number,
-    (SELECT i.item_title FROM ebay_remote.order_items i
-        WHERE i.order_id = o.order_id LIMIT 1) AS item_title
+    t.tracking_number
 FROM ebay_remote.orders o
 JOIN ebay_remote.order_tracking_numbers t USING (order_id)
+LEFT JOIN parcels_mutations pm ON pm.tracking_number = t.tracking_number
 WHERE o.is_untracked = false
   AND o.ordered_at IS NOT NULL
   AND o.ordered_at >= (SELECT cutoff_date::timestamptz FROM settings WHERE id = 1)
+  AND pm.tracking_number IS NULL
 """
 
 
 async def sync_once(pool: asyncpg.Pool) -> dict:
     inserted = 0
-    updated = 0
     skipped_cancelled = 0
     async with pool.acquire() as conn:
-        rows = await conn.fetch(SQL_FETCH)
-        log.info("fetched %d (order, tracking) pairs from ebay_remote", len(rows))
+        rows = await conn.fetch(SQL_FETCH_NEW)
+        log.info("fetched %d unseen (order, tracking) pairs", len(rows))
         for r in rows:
             tn = r["tracking_number"]
             if not tn:
                 continue
-            # Skip cancelled orders entirely on first import.
             if r["delivery_status"] and "cancel" in r["delivery_status"].lower():
                 skipped_cancelled += 1
                 continue
-            existing = await conn.fetchrow(
-                "SELECT tracking_number FROM parcels WHERE tracking_number = $1", tn
-            )
             ordered_at = r["ordered_at"] or datetime.now(tz=timezone.utc)
             eta = parse_eta(r["arriving_by_date"], ordered_at)
-            arrived_usa = (
-                datetime.combine(r["delivered_date"], datetime.min.time(), tzinfo=timezone.utc)
-                if r["delivered_date"] else None
+            await conn.execute(
+                """
+                INSERT INTO parcels_mutations (
+                    tracking_number, status, ordered_at, eta_usa, source_order_number
+                ) VALUES (
+                    $1, 'ordered'::parcel_status, $2, $3, $4
+                )
+                """,
+                tn, ordered_at, eta, r["order_number"],
             )
-            if existing is None:
-                status = "ordered"
-                if r["delivered_date"] is not None:
-                    status = random_seeded_status()
-                # Derive intermediate dates if downstream status was seeded.
-                received_usa = arrived_usa if status in {
-                    "received_by_forwarder_usa", "arrived_kg",
-                    "in_shipment_kg_to_ru", "delivered_ru",
-                } else None
-                arrived_kg = (
-                    received_usa if status in {"arrived_kg", "in_shipment_kg_to_ru", "delivered_ru"}
-                    else None
-                )
-                delivered_ru = (
-                    arrived_kg if status == "delivered_ru" else None
-                )
-                await conn.execute(
-                    """
-                    INSERT INTO parcels (
-                        tracking_number, status, ordered_at, eta_usa,
-                        arrived_usa_at, received_usa_at, arrived_kg_at, delivered_ru_at,
-                        source_order_number, sold_by, item_title, order_total_usd
-                    ) VALUES (
-                        $1, $2::parcel_status, $3, $4, $5, $6, $7, $8,
-                        $9, $10, $11, $12
-                    )
-                    """,
-                    tn, status, ordered_at, eta,
-                    arrived_usa, received_usa, arrived_kg, delivered_ru,
-                    r["order_number"], r["sold_by"], r["item_title"], r["order_total_usd"],
-                )
-                inserted += 1
-            else:
-                await conn.execute(
-                    """
-                    UPDATE parcels
-                       SET sold_by = $2,
-                           item_title = $3,
-                           order_total_usd = $4,
-                           eta_usa = COALESCE($5, eta_usa),
-                           arrived_usa_at = COALESCE(arrived_usa_at, $6)
-                     WHERE tracking_number = $1
-                    """,
-                    tn, r["sold_by"], r["item_title"], r["order_total_usd"],
-                    eta, arrived_usa,
-                )
-                updated += 1
-    log.info("done — inserted=%d updated=%d skipped_cancelled=%d", inserted, updated, skipped_cancelled)
-    return {"inserted": inserted, "updated": updated, "skipped_cancelled": skipped_cancelled}
+            inserted += 1
+    log.info("done — inserted=%d skipped_cancelled=%d", inserted, skipped_cancelled)
+    return {"inserted": inserted, "skipped_cancelled": skipped_cancelled}
 
 
 async def main_loop():
