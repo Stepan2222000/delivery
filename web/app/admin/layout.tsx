@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireRole } from "@/lib/auth-mock";
+import { requireRole } from "@/lib/auth";
 import { logout as apiLogout } from "@/lib/api/auth";
 import { cookies } from "next/headers";
 import { NavLink } from "@/components/shared/NavLink";

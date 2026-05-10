@@ -22,9 +22,9 @@ SHIPMENT_COLS = """
     s.waybill_photo_url, s.planned_sent_at, s.planned_arrival_at,
     s.sent_at, s.arrived_at, s.created_at,
     COALESCE(
-        (SELECT array_agg(p.tracking_number ORDER BY p.ordered_at)
-           FROM parcels p
-          WHERE p.shipment_kg_to_ru_id = s.id OR p.shipment_usa_to_kg_id = s.id),
+        (SELECT array_agg(pm.tracking_number ORDER BY pm.ordered_at)
+           FROM parcels_mutations pm
+          WHERE pm.shipment_kg_to_ru_id = s.id OR pm.shipment_usa_to_kg_id = s.id),
         ARRAY[]::text[]
     ) AS tracking_numbers
 """
@@ -231,7 +231,7 @@ async def send_shipment(
 
             col = "shipment_kg_to_ru_id" if sh["direction"] == "kg_to_ru" else "shipment_usa_to_kg_id"
             tns = await conn.fetch(
-                f"SELECT tracking_number, weight_kg FROM parcels WHERE {col} = $1", sid
+                f"SELECT tracking_number, weight_kg FROM parcels_mutations WHERE {col} = $1", sid
             )
             if not tns:
                 raise HTTPException(status.HTTP_409_CONFLICT, "empty_shipment")

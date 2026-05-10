@@ -72,7 +72,7 @@ async def _build_preview(pool: asyncpg.Pool, parsed: list[dict], role: str) -> I
     tns = [r["tracking_number"] for r in parsed if "tracking_number" in r]
     async with pool.acquire() as conn:
         existing = await conn.fetch(
-            "SELECT tracking_number, status, weight_kg, notes FROM parcels WHERE tracking_number = ANY($1::text[])",
+            "SELECT tracking_number, status, weight_kg, notes FROM parcels_mutations WHERE tracking_number = ANY($1::text[])",
             tns,
         )
     by_tn = {r["tracking_number"]: dict(r) for r in existing}
@@ -163,7 +163,7 @@ async def import_apply(
                 prev_status = None
                 if "status" in it.changes:
                     prev_status = await conn.fetchval(
-                        "SELECT status FROM parcels WHERE tracking_number = $1", it.tracking_number
+                        "SELECT status FROM parcels_mutations WHERE tracking_number = $1", it.tracking_number
                     )
                 sets, args = [], []
                 for field, val in it.changes.items():

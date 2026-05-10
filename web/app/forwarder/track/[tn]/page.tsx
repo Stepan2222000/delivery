@@ -8,6 +8,8 @@ import { formatDate, formatDateFull, computeTimings } from "@/lib/derive";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { IconArrowLeft, IconCheck, IconScale, IconTruck, IconPlus, IconChevronRight, IconCalendar } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
+import { TrackStages } from "@/components/shared/TrackStages";
+import { TrackTimings } from "@/components/shared/TrackTimings";
 import { PhotoUploadButton } from "@/components/forwarder/PhotoUploadButton";
 
 async function markReceivedUsa(formData: FormData) {
@@ -77,16 +79,6 @@ export default async function TrackDetail({ params }: { params: Promise<{ tn: st
   const inDraftShipmentId = parcel.status === "arrived_kg" ? parcel.shipmentKgToRuId : null;
   const inDraftShipment = inDraftShipmentId ? allShipments.find((s) => s.id === inDraftShipmentId) : null;
   const openDrafts = allShipments.filter((s) => s.status === "draft" && s.direction === "kg_to_ru");
-
-  const stages = [
-    { key: "ordered", label: "Заказано", date: parcel.orderedAt, done: true, current: parcel.status === "ordered" },
-    { key: "arrived_usa", label: "Прибыл в США", date: parcel.arrivedUsaAt, done: !!parcel.arrivedUsaAt, current: parcel.status === "arrived_usa" },
-    { key: "received_usa", label: "На складе США", date: parcel.receivedUsaAt, done: !!parcel.receivedUsaAt, current: parcel.status === "received_by_forwarder_usa" },
-    { key: "to_kg", label: "В пути в КГ", date: parcel.shipmentUsaToKgId ? parcel.receivedUsaAt : null, done: !!parcel.shipmentUsaToKgId, current: parcel.status === "in_shipment_usa_to_kg" },
-    { key: "arrived_kg", label: "Прибыл в КГ", date: parcel.arrivedKgAt, done: !!parcel.arrivedKgAt, current: parcel.status === "arrived_kg" },
-    { key: "to_ru", label: "В пути в РФ", date: parcel.shipmentKgToRuId ? parcel.arrivedKgAt : null, done: parcel.status === "in_shipment_kg_to_ru" || parcel.status === "delivered_ru", current: parcel.status === "in_shipment_kg_to_ru" },
-    { key: "delivered_ru", label: "Доставлено в РФ", date: parcel.deliveredRuAt, done: !!parcel.deliveredRuAt, current: parcel.status === "delivered_ru" },
-  ];
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -203,37 +195,12 @@ export default async function TrackDetail({ params }: { params: Promise<{ tn: st
         <div style={{ padding: "16px 18px 8px" }}>
           <div className="caption-up">Этапы</div>
         </div>
-        <ol style={{ listStyle: "none", padding: "0 18px 16px", margin: 0 }}>
-          {stages.map((s, i) => (
-            <li key={s.key} style={{ display: "grid", gridTemplateColumns: "20px 1fr auto", columnGap: 12, alignItems: "start", paddingTop: 10, paddingBottom: 10 }}>
-              <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                <div style={{
-                  width: 12, height: 12, borderRadius: "50%", marginTop: 4,
-                  background: s.done ? (s.current ? "var(--brand-coral)" : "var(--accent-teal)") : "transparent",
-                  border: s.done ? "0" : `2px solid ${s.current ? "var(--brand-coral)" : "var(--product-stroke)"}`,
-                }} />
-                {i < stages.length - 1 && (<div style={{ position: "absolute", top: 18, bottom: -10, width: 2, background: "var(--product-stroke)" }} />)}
-              </div>
-              <div>
-                <div className="title-sm" style={{ color: s.done ? "var(--on-dark-strong)" : "var(--on-dark-faint)", fontWeight: s.current ? 600 : 500 }}>{s.label}</div>
-                {s.key === "arrived_kg" && parcel.weightKg && (<div className="body-xs muted">{parcel.weightKg} кг</div>)}
-              </div>
-              <div className="body-xs mono muted" style={{ whiteSpace: "nowrap" }}>{s.date ? formatDate(s.date) : "—"}</div>
-            </li>
-          ))}
-        </ol>
+        <TrackStages parcel={parcel} />
       </section>
 
       <section className="card fade-up" style={{ marginBottom: 14, padding: 18 }}>
         <div className="caption-up" style={{ marginBottom: 10 }}>Сроки</div>
-        <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "1fr auto", rowGap: 8, columnGap: 12 }}>
-          <Row label="В пути в США" value={timings.inUsaTransit !== null ? `${timings.inUsaTransit} дн` : "—"} />
-          <Row label="На складе США" value={timings.dwellUsa !== null ? `${timings.dwellUsa} дн` : "—"} />
-          <Row label="США → КГ" value={timings.usaToKg !== null ? `${timings.usaToKg} дн` : "—"} />
-          <Row label="На складе КГ" value={timings.dwellKg !== null ? `${timings.dwellKg} дн` : "—"} />
-          <Row label="КГ → РФ" value={timings.kgToRu !== null ? `${timings.kgToRu} дн` : "—"} />
-          <Row label="Всего" value={`${timings.total ?? 0} дн`} strong />
-        </dl>
+        <TrackTimings timings={timings} />
       </section>
 
       <section className="card fade-up" style={{ padding: 18 }}>
@@ -274,11 +241,3 @@ export default async function TrackDetail({ params }: { params: Promise<{ tn: st
   );
 }
 
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <>
-      <dt className="body-sm muted" style={{ margin: 0 }}>{label}</dt>
-      <dd className="body-sm mono" style={{ margin: 0, fontWeight: strong ? 600 : 400, textAlign: "right", color: strong ? "var(--on-dark-strong)" : undefined }}>{value}</dd>
-    </>
-  );
-}

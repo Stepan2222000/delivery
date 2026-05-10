@@ -12,7 +12,7 @@ import {
 } from "@/lib/api/shipments";
 import { listParcels, patchParcel } from "@/lib/api/parcels";
 import { ApiError } from "@/lib/api/client";
-import { formatDate } from "@/lib/derive";
+import { formatDate, parseDateInput, isoToInput } from "@/lib/derive";
 import {
   IconArrowLeft, IconTrash, IconSend, IconCalendar, IconTruck, IconCamera,
 } from "@/components/shared/Icons";
@@ -23,11 +23,6 @@ import { Toast } from "@/components/shared/Toast";
 import { AvailableParcelsList } from "@/components/forwarder/AvailableParcelsList";
 import { ShipmentXlsxButtons } from "@/components/shared/ShipmentXlsxButtons";
 
-function parseDate(s: string): string | null {
-  const t = s.trim();
-  if (!t) return null;
-  return new Date(t + "T08:00:00Z").toISOString();
-}
 
 function apiErrorRedirect(id: string, e: unknown): never {
   const code = e instanceof ApiError ? `${e.status}:${e.detail}` : "unknown";
@@ -40,8 +35,8 @@ async function saveDraft(formData: FormData) {
   try {
     await patchShipment(id, {
       transport: String(formData.get("transport") ?? "").trim() || null,
-      plannedSentAt: parseDate(String(formData.get("planned_sent_at") ?? "")),
-      plannedArrivalAt: parseDate(String(formData.get("planned_arrival_at") ?? "")),
+      plannedSentAt: parseDateInput(String(formData.get("planned_sent_at") ?? "")),
+      plannedArrivalAt: parseDateInput(String(formData.get("planned_arrival_at") ?? "")),
       waybillNo: String(formData.get("waybill") ?? "").trim() || null,
       notes: String(formData.get("notes") ?? "").trim() || null,
     });
@@ -108,17 +103,7 @@ async function updateWeight(formData: FormData) {
   const weightRaw = String(formData.get("weight") ?? "").trim();
   const weight = Number(weightRaw);
   if (!Number.isFinite(weight) || weight <= 0) return;
-  try {
-    await patchParcel(tn, { weightKg: weight });
-  } catch (e) {
-    if (e instanceof ApiError) {
-      // Best-effort revalidate so UI doesn't lie, but swallow API error here
-      // (input is local-state, retry is a re-blur). Logged to server console.
-      console.error("updateWeight failed:", e.status, e.detail);
-      return;
-    }
-    throw e;
-  }
+  await patchParcel(tn, { weightKg: weight });
   revalidatePath("/forwarder/shipment/[id]", "page");
   revalidatePath("/forwarder");
   revalidatePath(`/forwarder/track/${tn}`);
@@ -137,8 +122,6 @@ async function dropDraft(formData: FormData) {
   redirect("/forwarder");
 }
 
-const isoToInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : "");
-
 export default async function ShipmentDetail({
   params,
   searchParams,
@@ -155,11 +138,10 @@ export default async function ShipmentDetail({
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   }
-  const [allInDraft, allAvailable] = await Promise.all([
+  const [inDraft, allAvailable] = await Promise.all([
     listParcels({ shipmentId: sh.id }),
     listParcels({ status: "arrived_kg" }),
   ]);
-  const inDraft = allInDraft;
   const available = allAvailable.filter((p) => !p.shipmentKgToRuId);
   const isDraft = sh.status === "draft";
   const missingSet = new Set(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { IconSearch, IconX } from "./Icons";
 
@@ -11,10 +11,6 @@ export function SearchBar({ placeholder = "Поиск по треку" }: { plac
   const initial = sp.get("q") ?? "";
   const [open, setOpen] = useState(initial.length > 0);
   const [q, setQ] = useState(initial);
-
-  useEffect(() => {
-    setQ(sp.get("q") ?? "");
-  }, [sp]);
 
   const apply = (next: string) => {
     const params = new URLSearchParams(sp.toString());

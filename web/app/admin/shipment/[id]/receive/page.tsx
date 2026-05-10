@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getShipment, receiveShipment as receiveShipmentApi } from "@/lib/api/shipments";
-import { getParcel } from "@/lib/api/parcels";
+import { listParcels } from "@/lib/api/parcels";
 import { ApiError } from "@/lib/api/client";
 import { formatDate } from "@/lib/derive";
 import { IconArrowLeft, IconCheck } from "@/components/shared/Icons";
@@ -36,9 +36,7 @@ export default async function ReceiveShipment({ params }: { params: Promise<{ id
   }
   if (sh.direction !== "kg_to_ru") notFound();
 
-  const items = (await Promise.all(sh.trackingNumbers.map((tn) =>
-    getParcel(tn).catch(() => null)
-  ))).filter((p): p is NonNullable<typeof p> => !!p);
+  const items = await listParcels({ shipmentId: sh.id });
 
   return (
     <div>

@@ -2,6 +2,14 @@ import type { Parcel, Settings, ParcelStatus } from "./types";
 
 const MS_PER_DAY = 86_400_000;
 
+export function parseDateInput(s: string): string | null {
+  const t = s.trim();
+  if (!t) return null;
+  return new Date(t + "T08:00:00Z").toISOString();
+}
+
+export const isoToInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : "");
+
 const daysBetween = (a: string, b: string): number =>
   Math.floor((new Date(b).getTime() - new Date(a).getTime()) / MS_PER_DAY);
 

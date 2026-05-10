@@ -1,9 +1,5 @@
-"""Status transition rules.
-
-- Forwarder may only move forward through their own set of transitions.
-- Admin may set anything (rollback included), but the API surfaces a flag so the UI
-  can show a confirmation dialog for backwards moves.
-"""
+"""Status transition rules. Admin may set anything; the API surfaces a flag so
+the UI can warn on backwards moves (forwarder is constrained — see below)."""
 from __future__ import annotations
 
 from .schemas import ParcelStatus

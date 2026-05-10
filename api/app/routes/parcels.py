@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
@@ -152,7 +150,6 @@ async def patch_parcel(
                     )
                 args.append(new_status)
                 sets.append(f"status = ${len(args)}::parcel_status")
-                # Side-effect dates by transition.
                 now_clause = "now()"
                 if new_status == "arrived_usa":
                     sets.append(f"arrived_usa_at = COALESCE(arrived_usa_at, {now_clause})")

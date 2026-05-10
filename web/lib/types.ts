@@ -82,12 +82,3 @@ export interface User {
   role: Role;
   displayName: string;
 }
-
-// DTO returned to forwarder — admin fields stripped
-export type ForwarderParcelDTO = Omit<Parcel, "adminOnly">;
-
-export function toForwarderDTO(p: Parcel): ForwarderParcelDTO {
-  const { adminOnly, ...rest } = p;
-  void adminOnly;
-  return rest;
-}

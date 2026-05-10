@@ -107,16 +107,7 @@ async def get_current_user(
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "user_gone")
 
-    # Slide cookie expiration forward so client matches server.
-    response.set_cookie(
-        key=settings.cookie_name,
-        value=str(sid),
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        expires=row["expires_at"],
-        path="/",
-    )
+    set_cookie(response, sid, row["expires_at"])
     return CurrentUser(
         id=user["id"], role=user["role"], display_name=user["display_name"], session_id=sid
     )

@@ -1,4 +1,4 @@
-import { apiGet, apiSend, apiUpload, toCamel } from "./client";
+import { apiGet, apiSend, apiUpload } from "./client";
 import type { Parcel, ParcelStatus, ProblemFlag } from "../types";
 
 interface ApiParcel {
@@ -100,4 +100,3 @@ export async function uploadParcelPhoto(tn: string, file: File): Promise<{ publi
   return apiUpload<{ public_url: string }>(`/parcels/${encodeURIComponent(tn)}/photos`, file);
 }
 
-export { toCamel };

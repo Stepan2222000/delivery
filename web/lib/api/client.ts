@@ -1,10 +1,3 @@
-/**
- * API client for the delivery FastAPI backend.
- *
- * Server components: cookies are read from next/headers and forwarded.
- * Client components: relative URL through Next rewrite (see next.config),
- *   browser sends cookies automatically.
- */
 import { cookies } from "next/headers";
 
 const API_BASE = process.env.DELIVERY_API_URL ?? "http://127.0.0.1:8002";
@@ -68,18 +61,4 @@ export async function apiUpload<T>(path: string, file: File | Blob, fieldName = 
     cache: "no-store",
   });
   return handle<T>(res);
-}
-
-/** snake_case keys → camelCase, recursive. Dates returned as ISO strings as-is. */
-export function toCamel<T = unknown>(input: unknown): T {
-  if (Array.isArray(input)) return input.map(toCamel) as unknown as T;
-  if (input && typeof input === "object" && !(input instanceof Date)) {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
-      const ck = k.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
-      out[ck] = toCamel(v);
-    }
-    return out as T;
-  }
-  return input as T;
 }

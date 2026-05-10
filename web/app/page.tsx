@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth-mock";
+import { getSession } from "@/lib/auth";
 
 export default async function Index() {
   const u = await getSession();

@@ -2,14 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createShipment, uploadShipmentWaybill } from "@/lib/api/shipments";
+import { parseDateInput } from "@/lib/derive";
 import { IconArrowLeft } from "@/components/shared/Icons";
 import { TransportSelect } from "@/components/shared/TransportSelect";
-
-function parseDateInput(s: string): string | null {
-  const t = s.trim();
-  if (!t) return null;
-  return new Date(t + "T08:00:00Z").toISOString();
-}
 
 async function createDraftShipment(formData: FormData) {
   "use server";
