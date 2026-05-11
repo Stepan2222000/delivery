@@ -106,6 +106,7 @@ jobs:
               -v "$PWD/sql:/sql:ro" \
               postgres:18-alpine \
               psql -h 194.164.245.107 -p 5408 -U admin -d delivery -f /sql/001_init.sql || true
+            docker network inspect db_default >/dev/null 2>&1 || docker network create db_default
             docker compose up -d --remove-orphans
             docker image prune -f
             docker compose ps
