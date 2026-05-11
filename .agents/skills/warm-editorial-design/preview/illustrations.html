@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Illustrations</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 32px; background: var(--cream-canvas); font-family: var(--font-sans); color: var(--ink); }
+  h1 { font-family: var(--font-serif); font-weight: 400; font-size: 36px; letter-spacing: -1px; margin: 0 0 8px; }
+  p.lede { color: var(--muted); max-width: 64ch; margin: 0 0 32px; line-height: 1.55; }
+  h2 { font-family: var(--font-serif); font-weight: 400; font-size: 22px; letter-spacing: -0.4px; margin: 40px 0 16px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .card { background: var(--cream-card); border-radius: 12px; padding: 14px; }
+  .frame { background: var(--cream-canvas); border-radius: 8px; overflow: hidden; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; padding: 12px; }
+  .frame img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .name { font-size: 11px; color: var(--muted); margin-top: 10px; font-family: var(--font-mono); word-break: break-all; }
+
+  /* coral-bg variants — these illustrations are designed to sit on coral */
+  .grid.on-coral .frame { background: var(--brand-coral); }
+  .grid.on-coral .card  { background: var(--cream-card); }
+
+  .sizes { display: grid; grid-template-columns: 200px 120px 60px; align-items: center; gap: 24px; padding: 24px; background: var(--cream-card); border-radius: 12px; margin-bottom: 12px; }
+  .sizes img { display: block; border-radius: 6px; object-fit: cover; }
+</style>
+</head>
+<body>
+  <h1>Illustration library.</h1>
+  <p class="lede">A library of editorial illustrations in the warm coral-and-cream language. <strong>SVG line drawings</strong> sit on cream, coral, or any neutral surface — pure black contour, scale infinitely. <strong>Coral-bg PNG</strong> illustrations are pre-composed scenes meant to drop in as-is.</p>
+
+  <h2>Line illustrations · SVG</h2>
+  <div class="grid" id="svgs"></div>
+
+  <h2>Coral scenes · PNG</h2>
+  <div class="grid on-coral" id="pngs"></div>
+
+  <h2>Three sizes — same SVG</h2>
+  <div id="sizes"></div>
+
+  <script>
+    const SVGS = [
+      // hands & gestures
+      'hand-drawing','hand-treble','hand-shapes-stack','hand-tree','hand-burst','hand-graph-coral','bar-chart-hand','hands-graph',
+      // heads / faces
+      'head-graph','profile-flower',
+      // objects / scenes
+      'graph-on-page','chart-presentation','lamp-paper','laptop-keyhole','page-spring','hourglass','scales-balance','dna-helix',
+      // shape grids
+      'shapes-grid','shapes-glyphs-grid'
+    ];
+    const PNGS = [
+      'head-bloom','growth-plants','hand-orbit','hand-shapes',
+      'head-constellation','hand-atom','bolt-circuit',
+      'shape-stack-small','shapes-pink'
+    ];
+
+    const svgCard = (name) => `
+      <div class="card">
+        <div class="frame"><img src="../assets/illustrations/${name}.svg" alt="${name}" loading="lazy"/></div>
+        <div class="name">${name}.svg</div>
+      </div>`;
+    const pngCard = (name) => `
+      <div class="card">
+        <div class="frame"><img src="../assets/illustrations/${name}.png" alt="${name}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/></div>
+        <div class="name">${name}.png</div>
+      </div>`;
+
+    document.getElementById('svgs').innerHTML = SVGS.map(svgCard).join('');
+    document.getElementById('pngs').innerHTML = PNGS.map(pngCard).join('');
+
+    const sample = ['hand-tree','hand-graph-coral','laptop-keyhole','dna-helix'];
+    document.getElementById('sizes').innerHTML = sample.map(n => `
+      <div class="sizes">
+        <img src="../assets/illustrations/${n}.svg" alt="${n}" style="width:200px;height:200px"/>
+        <img src="../assets/illustrations/${n}.svg" alt="${n}" style="width:120px;height:120px"/>
+        <img src="../assets/illustrations/${n}.svg" alt="${n}" style="width:60px;height:60px"/>
+      </div>`).join('');
+  </script>
+</body>
+</html>

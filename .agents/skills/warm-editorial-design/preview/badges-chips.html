@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Badges & Chips</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:24px;background:var(--cream-canvas);font-family:var(--font-sans);}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .row + .row{margin-top:14px;}
+  .pill{padding:4px 12px;border-radius:9999px;font-size:13px;font-weight:500;}
+  .pill.cream{background:var(--cream-card);color:var(--ink);}
+  .pill.coral{background:var(--brand-coral);color:#fff;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;}
+  .pill.plan{background:linear-gradient(rgba(155,135,245,0.12),rgba(90,79,143,0.12));color:#9b87f5;border:1px solid rgba(155,135,245,0.18);font-family:var(--font-serif);font-size:14px;letter-spacing:-0.5px;padding:6px 12px;}
+  .pill.preset{background:rgba(20,20,19,0.05);color:var(--muted);font-size:10px;padding:4px 8px;border-radius:9999px;}
+  .pill.private{background:var(--cream-strong);color:var(--ink);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;border:1px solid var(--cream-hairline);display:inline-flex;align-items:center;gap:6px;}
+  .pill.private svg{width:10px;height:10px;}
+</style></head><body>
+<div class="row">
+  <span class="pill cream">Category</span>
+  <span class="pill coral">NEW</span>
+  <span class="pill plan">Professional Plan</span>
+  <span class="pill preset">Preset</span>
+  <span class="pill private"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Private</span>
+</div>
+</body></html>

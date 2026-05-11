@@ -7,6 +7,7 @@ import { SelectionProvider } from "@/components/shared/Selection";
 import { BulkActionBar } from "@/components/shared/BulkActionBar";
 import { ImportXlsxButton } from "@/components/shared/ImportXlsxButton";
 import { SelectAllToolbar } from "@/components/shared/SelectAllToolbar";
+import { SearchBar } from "@/components/shared/SearchBar";
 import { ParcelsList } from "@/components/forwarder/ParcelsList";
 import { IconAlert, IconChevronRight, IconTruck, IconCalendar } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
@@ -46,6 +47,9 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
             «{q}» — {results.length} {results.length === 1 ? "трек" : "треков"}
           </h1>
         </header>
+        <div className="track-search">
+          <SearchBar placeholder="Поиск по треку" defaultOpen />
+        </div>
         {results.length === 0 ? (
           <div className="card" style={{ padding: 32, textAlign: "center" }}>
             <p className="body-md" style={{ margin: 0 }}>Ничего не нашлось.</p>
@@ -139,6 +143,10 @@ export default async function ForwarderHome({ searchParams }: { searchParams: Pr
           </div>
         </section>
       )}
+
+      <div className="track-search">
+        <SearchBar placeholder="Поиск по треку" defaultOpen />
+      </div>
 
       <nav className="tabs" style={{ marginBottom: 18 }} role="tablist">
         {TABS.map((t) => (

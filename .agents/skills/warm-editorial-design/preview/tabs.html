@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Tabs & Nav-link</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:24px;background:var(--cream-canvas);font-family:var(--font-sans);}
+  .row{display:flex;gap:6px;align-items:center;}
+  .tab{padding:8px 14px;font-size:14px;font-weight:500;color:var(--muted);border-radius:var(--radius-md);cursor:pointer;}
+  .tab.active{background:var(--cream-card);color:var(--ink);}
+  .tab:hover:not(.active){color:var(--ink);}
+  /* product variant */
+  .product{margin-top:24px;padding:14px;background:var(--product-bg);border-radius:8px;}
+  .product .tab{color:rgba(255,255,255,0.6);}
+  .product .tab.active{background:rgba(255,255,255,0.08);color:#fff;}
+</style></head><body>
+<div class="row">
+  <div class="tab active">Overview</div>
+  <div class="tab">Pricing</div>
+  <div class="tab">Research</div>
+  <div class="tab">Company</div>
+</div>
+<div class="product"><div class="row">
+  <div class="tab active">All chats</div>
+  <div class="tab">Starred</div>
+  <div class="tab">Projects</div>
+</div></div>
+</body></html>

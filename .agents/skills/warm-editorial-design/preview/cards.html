@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Cards — Cream & Dark</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:18px;background:var(--cream-canvas);font-family:var(--font-sans);}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{padding:20px;border-radius:var(--radius-lg);}
+  .feature{background:var(--cream-card);color:var(--ink);}
+  .dark{background:var(--slate-900);color:var(--on-dark);}
+  h3{font-family:var(--font-serif);font-weight:400;font-size:22px;line-height:1.2;letter-spacing:-0.3px;margin:0 0 6px;}
+  p{font-size:13px;line-height:1.5;margin:0;color:var(--body);}
+  .dark p{color:rgba(255,255,255,0.7);}
+  .dot{width:18px;height:18px;border-radius:6px;background:var(--brand-coral);margin-bottom:10px;}
+</style></head><body>
+<div class="row">
+  <div class="card feature"><div class="dot"></div><h3>Reason about anything</h3><p>The assistant thinks step-by-step before answering — useful for analysis, code review, and ambiguity.</p></div>
+  <div class="card dark"><div class="dot" style="background:#5db8a6;"></div><h3>Run code, not just print it</h3><p style="font-family:var(--font-mono);font-size:12px;background:#1f1e1b;padding:8px 10px;border-radius:6px;display:inline-block;margin-top:6px;">$ assistant run review.py</p></div>
+</div>
+</body></html>

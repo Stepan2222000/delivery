@@ -6,6 +6,7 @@ import { isOverdue, overdueReason, formatDate } from "@/lib/derive";
 import { SelectionProvider } from "@/components/shared/Selection";
 import { BulkActionBar } from "@/components/shared/BulkActionBar";
 import { ImportXlsxButton } from "@/components/shared/ImportXlsxButton";
+import { SearchBar } from "@/components/shared/SearchBar";
 import { IconAlert, IconChevronRight } from "@/components/shared/Icons";
 import { CopyTrack } from "@/components/shared/CopyTrack";
 import type { ParcelStatus } from "@/lib/types";
@@ -46,6 +47,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
               «{q}»
             </h1>
           </header>
+          <div className="track-search">
+            <SearchBar placeholder="Поиск по треку или товару" defaultOpen />
+          </div>
           <ParcelsTable parcels={parcels} q={q} filter={filter} settings={settings} today={today} />
           <BulkActionBar role="admin" />
         </div>
@@ -143,6 +147,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         </div>
       </section>
 
+      <div className="track-search">
+        <SearchBar placeholder="Поиск по треку или товару" defaultOpen />
+      </div>
       <ParcelsTable parcels={parcels} q={q} filter={filter} settings={settings} today={today} />
       <BulkActionBar role="admin" />
 

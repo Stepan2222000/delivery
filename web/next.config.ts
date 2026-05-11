@@ -4,7 +4,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      { protocol: "http", hostname: "2.26.53.128", port: "9000" },
+      { protocol: "http", hostname: "194.164.245.107", port: "9000" },
     ],
   },
 };

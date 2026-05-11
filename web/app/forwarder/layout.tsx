@@ -5,7 +5,6 @@ import { logout as apiLogout } from "@/lib/api/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NavLink } from "@/components/shared/NavLink";
-import { SearchBar } from "@/components/shared/SearchBar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { IconLogout } from "@/components/shared/Icons";
 
@@ -29,7 +28,6 @@ export default async function ForwarderLayout({ children }: { children: ReactNod
           <NavLink href="/forwarder" exact>Треки</NavLink>
           <NavLink href="/forwarder/shipment/new">Новая отгрузка</NavLink>
         </nav>
-        <SearchBar placeholder="Поиск по треку" />
         <div className="who">
           <span className="who-name">{u.displayName}</span>
           <ThemeToggle />

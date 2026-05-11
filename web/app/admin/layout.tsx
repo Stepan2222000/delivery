@@ -5,7 +5,6 @@ import { requireRole } from "@/lib/auth";
 import { logout as apiLogout } from "@/lib/api/auth";
 import { cookies } from "next/headers";
 import { NavLink } from "@/components/shared/NavLink";
-import { SearchBar } from "@/components/shared/SearchBar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { IconLogout } from "@/components/shared/Icons";
 import { DevModeProvider, DevModeToggle, DevModeBanner } from "@/components/admin/DevMode";
@@ -33,7 +32,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <NavLink href="/admin/untracked">Без трека</NavLink>
             <NavLink href="/admin/settings">Настройки</NavLink>
           </nav>
-          <SearchBar placeholder="Поиск по треку или товару" />
           <div className="who">
             <span className="who-name">{u.displayName}</span>
             <DevModeToggle />

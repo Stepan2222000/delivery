@@ -627,8 +627,12 @@ label.field > .field-label {
 }
 
 /* ============================================================
-   Search bar (lives in top-nav)
+   Track search
    ============================================================ */
+.track-search {
+  width: min(520px, 100%);
+  margin-bottom: 16px;
+}
 .search-bar {
   display: inline-flex;
   align-items: center;
@@ -639,6 +643,7 @@ label.field > .field-label {
   border: 1px solid var(--product-input-border);
   border-radius: var(--radius-pill);
   min-width: 220px;
+  width: 100%;
 }
 .search-bar:focus-within { border-color: var(--brand-coral); }
 .search-bar .search-icon { color: var(--on-dark-faint); }

@@ -105,7 +105,7 @@ jobs:
               -e PGPASSWORD=Password123 \
               -v "$PWD/sql:/sql:ro" \
               postgres:18-alpine \
-              psql -h 2.26.53.128 -p 5408 -U admin -d delivery -f /sql/001_init.sql || true
+              psql -h 194.164.245.107 -p 5408 -U admin -d delivery -f /sql/001_init.sql || true
             docker compose up -d --remove-orphans
             docker image prune -f
             docker compose ps

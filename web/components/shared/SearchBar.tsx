@@ -4,12 +4,16 @@ import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { IconSearch, IconX } from "./Icons";
 
-export function SearchBar({ placeholder = "Поиск по треку" }: { placeholder?: string }) {
+export function SearchBar({
+  placeholder = "Поиск по треку",
+  defaultOpen = false,
+}: { placeholder?: string; defaultOpen?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
   const initial = sp.get("q") ?? "";
-  const [open, setOpen] = useState(initial.length > 0);
+  const [open, setOpen] = useState(defaultOpen || initial.length > 0);
+  const [shouldFocus, setShouldFocus] = useState(false);
   const [q, setQ] = useState(initial);
 
   const apply = (next: string) => {
@@ -27,7 +31,7 @@ export function SearchBar({ placeholder = "Поиск по треку" }: { plac
 
   if (!open) {
     return (
-      <button type="button" className="btn btn-ghost btn-sm" aria-label="Поиск" onClick={() => setOpen(true)}>
+      <button type="button" className="btn btn-ghost btn-sm" aria-label="Поиск" onClick={() => { setOpen(true); setShouldFocus(true); }}>
         <IconSearch width={18} height={18} />
       </button>
     );
@@ -41,7 +45,7 @@ export function SearchBar({ placeholder = "Поиск по треку" }: { plac
         placeholder={placeholder}
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        autoFocus
+        autoFocus={shouldFocus}
       />
       <button type="button" className="search-clear" aria-label="Закрыть" onClick={() => { setQ(""); apply(""); setOpen(false); }}>
         <IconX width={14} height={14} />

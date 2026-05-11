@@ -11,7 +11,7 @@ DROP SERVER IF EXISTS ebay_server CASCADE;
 CREATE SERVER ebay_server
     FOREIGN DATA WRAPPER postgres_fdw
     OPTIONS (
-        host '2.26.53.128',
+        host '194.164.245.107',
         port '5405',
         dbname 'ebay_orders',
         fetch_size '1000'

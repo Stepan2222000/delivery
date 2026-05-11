@@ -6,16 +6,16 @@ services:
     ports:
       - "3301:8000"
     environment:
-      DELIVERY_PG_DSN: postgresql://admin:Password123@2.26.53.128:5408/delivery
-      WEB_ORIGIN: http://2.26.53.128:3300
-      MINIO_ENDPOINT: 2.26.53.128:9000
+      DELIVERY_PG_DSN: postgresql://admin:Password123@194.164.245.107:5408/delivery
+      WEB_ORIGIN: http://194.164.245.107:3300
+      MINIO_ENDPOINT: 194.164.245.107:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: Password123
       MINIO_SECURE: "false"
       MINIO_BUCKET_PHOTOS: parts-photos
       MINIO_PHOTO_PREFIX: delivery/parcels
       MINIO_BUCKET_WAYBILLS: delivery-photos
-      MINIO_PUBLIC_BASE: http://2.26.53.128:9000
+      MINIO_PUBLIC_BASE: http://194.164.245.107:9000
       COOKIE_NAME: delivery_session
       SESSION_TTL_DAYS: "30"
     networks:
@@ -26,7 +26,7 @@ services:
     container_name: delivery_sync
     restart: unless-stopped
     environment:
-      DELIVERY_PG_DSN: postgresql://admin:Password123@2.26.53.128:5408/delivery
+      DELIVERY_PG_DSN: postgresql://admin:Password123@194.164.245.107:5408/delivery
       SYNC_INTERVAL_MINUTES: "5"
     networks:
       - db_default

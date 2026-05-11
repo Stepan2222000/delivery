@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<title>Buttons — Product (dark)</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  body{margin:0;padding:24px;background:var(--product-bg);font-family:var(--font-sans);}
+  .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .btn{font-family:var(--font-sans);font-weight:500;font-size:16px;line-height:1;cursor:pointer;padding:6px 10px;border-radius:var(--radius-md);height:33px;display:inline-flex;align-items:center;gap:4px;letter-spacing:-0.5px;}
+  .primary{background:#aa532e;color:#fff;border:1px solid #9c5a3c;box-shadow:var(--shadow-product),var(--shadow-coral-inset);}
+  .secondary{background:rgba(0,0,0,0.2);color:#fff;border:none;}
+  .outline{background:transparent;color:rgba(255,255,255,0.6);border:1px solid #373632;font-size:11px;height:26px;padding:6px 8px;}
+  .model{background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:13px;font-family:var(--font-serif);}
+</style></head><body>
+<div class="row">
+  <button class="btn primary"><span style="font-size:14px">+</span>Start new chat</button>
+  <button class="btn secondary">Cancel</button>
+  <button class="btn outline">Use a project</button>
+  <button class="btn model">Large model ▾</button>
+</div>
+</body></html>
