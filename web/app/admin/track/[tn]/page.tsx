@@ -10,6 +10,7 @@ import { IconArrowLeft, IconTruck, IconCalendar } from "@/components/shared/Icon
 import { CopyTrack } from "@/components/shared/CopyTrack";
 import { TrackStages } from "@/components/shared/TrackStages";
 import { TrackTimings } from "@/components/shared/TrackTimings";
+import { ForceStatusButton } from "@/components/admin/ForceStatusButton";
 
 export default async function AdminTrackDetail({ params }: { params: Promise<{ tn: string }> }) {
   const { tn } = await params;
@@ -34,7 +35,10 @@ export default async function AdminTrackDetail({ params }: { params: Promise<{ t
       </Link>
 
       <header style={{ marginBottom: 18 }}>
-        <div style={{ marginBottom: 10 }}><StatusPill status={parcel.status} /></div>
+        <div style={{ marginBottom: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <StatusPill status={parcel.status} />
+          <ForceStatusButton trackingNumber={parcel.trackingNumber} currentStatus={parcel.status} />
+        </div>
         <div style={{ marginBottom: 8 }}><CopyTrack value={parcel.trackingNumber} size="xl" /></div>
         <div className="body-sm muted" style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
           <span>eBay <CopyTrack value={parcel.adminOnly.sourceOrderNumber} /></span>

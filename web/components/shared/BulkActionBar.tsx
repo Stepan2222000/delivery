@@ -10,6 +10,7 @@ import {
   bulkReceiveShipment,
   type BulkResult,
 } from "@/lib/bulk-actions";
+import { useDevMode } from "@/components/admin/DevMode";
 
 export type BulkRole = "admin" | "forwarder";
 
@@ -44,12 +45,15 @@ export interface BulkContextProps {
 export function BulkActionBar(props: BulkContextProps) {
   const { selected, count, clear } = useSelection();
   const router = useRouter();
+  const dev = useDevMode();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState<null | "status" | "addShip">(null);
+  const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
   const [report, setReport] = useState<BulkResult | null>(null);
 
   if (count === 0) return null;
   const ids = Array.from(selected);
+  const devForce = props.role === "admin" && dev.on;
 
   const downloadXlsx = () => {
     const url = `/api/export.xlsx?ids=${encodeURIComponent(ids.join(","))}`;
@@ -59,10 +63,19 @@ export function BulkActionBar(props: BulkContextProps) {
     a.click();
   };
 
-  const onStatus = (status: string) => {
+  const pickStatus = (status: string) => {
     setOpen(null);
+    if (devForce) {
+      setConfirmStatus(status);
+      return;
+    }
+    runStatus(status, false);
+  };
+
+  const runStatus = (status: string, force: boolean) => {
+    setConfirmStatus(null);
     startTransition(async () => {
-      const r = await bulkChangeStatus(ids, status);
+      const r = await bulkChangeStatus(ids, status, force);
       setReport(r);
       if (r.errors.length === 0) clear();
       router.refresh();
@@ -143,7 +156,7 @@ export function BulkActionBar(props: BulkContextProps) {
         <Modal title="Сменить статус выбранных" onClose={() => setOpen(null)}>
           <div style={{ display: "grid", gap: 8 }}>
             {allowedStatuses.map((s) => (
-              <button key={s.value} className="btn btn-secondary btn-block" onClick={() => onStatus(s.value)}>
+              <button key={s.value} className="btn btn-secondary btn-block" onClick={() => pickStatus(s.value)}>
                 {s.label}
               </button>
             ))}
@@ -151,9 +164,50 @@ export function BulkActionBar(props: BulkContextProps) {
           <p className="body-xs muted" style={{ marginTop: 12 }}>
             {props.role === "forwarder"
               ? "Доступны только переходы вперёд по конвейеру."
-              : "Менеджер может выставить любой статус. Откаты назад применятся без вопросов."}
+              : devForce
+                ? "Включён режим разработчика: статус применится напрямую и снимет привязку к отгрузке."
+                : "Менеджер может выставить любой статус. Откаты назад применятся без вопросов."}
             {" "}Несовместимые переходы будут пропущены и показаны в отчёте.
           </p>
+        </Modal>
+      )}
+
+      {confirmStatus && (
+        <Modal
+          title="Подтвердите перенос"
+          onClose={() => setConfirmStatus(null)}
+          wide
+        >
+          <p className="body-sm" style={{ marginTop: 0 }}>
+            Перенести <b>{count}</b>{" "}
+            {count === 1 ? "трек" : count < 5 ? "трека" : "треков"} в статус{" "}
+            <b>«{STATUS_LABELS.find((s) => s.value === confirmStatus)?.label ?? confirmStatus}»</b>.
+          </p>
+          <ul className="body-xs muted" style={{ margin: "0 0 12px 18px", padding: 0 }}>
+            <li>Текущий статус и порядок этапов не проверяется.</li>
+            <li>Привязка к любым отгрузкам будет снята.</li>
+            <li>Действие фиксируется в истории трека с пометкой «admin force».</li>
+          </ul>
+          <details style={{ marginBottom: 12 }}>
+            <summary className="caption-up" style={{ cursor: "pointer" }}>
+              Показать треки ({count})
+            </summary>
+            <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 4, maxHeight: 200, overflowY: "auto" }}>
+              {ids.map((tn) => (
+                <li key={tn} className="mono body-xs" style={{ padding: "4px 8px", background: "rgba(0,0,0,0.04)", borderRadius: 4 }}>
+                  {tn}
+                </li>
+              ))}
+            </ul>
+          </details>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button className="btn btn-ghost" onClick={() => setConfirmStatus(null)} disabled={pending}>
+              Отмена
+            </button>
+            <button className="btn btn-primary" onClick={() => runStatus(confirmStatus, true)} disabled={pending}>
+              {pending ? "Применяю…" : "Подтвердить"}
+            </button>
+          </div>
         </Modal>
       )}
 
@@ -214,7 +268,7 @@ export function BulkActionBar(props: BulkContextProps) {
   );
 }
 
-function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+function Modal({ title, children, onClose, wide }: { title: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <div role="dialog" aria-modal="true"
       style={{
@@ -229,7 +283,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         style={{
           background: "var(--product-bg)",
           border: "1px solid var(--product-stroke)",
-          borderRadius: 12, padding: 20, maxWidth: 480, width: "100%",
+          borderRadius: 12, padding: 20, maxWidth: wide ? 640 : 480, width: "100%",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>

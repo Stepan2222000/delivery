@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useDevMode } from "@/components/admin/DevMode";
 
 interface PreviewItem {
   tracking_number: string;
@@ -20,7 +21,9 @@ interface PreviewResp {
 export function ImportXlsxButton() {
   const fileInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const dev = useDevMode();
   const [preview, setPreview] = useState<PreviewResp | null>(null);
+  const [previewForce, setPreviewForce] = useState(false);
   const [pending, startTransition] = useTransition();
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -30,13 +33,15 @@ export function ImportXlsxButton() {
     setLoadError(null);
     const fd = new FormData();
     fd.append("file", f);
+    const force = dev.on;
     try {
-      const res = await fetch("/api/import/preview", { method: "POST", body: fd });
+      const res = await fetch(`/api/import/preview${force ? "?force=1" : ""}`, { method: "POST", body: fd });
       if (!res.ok) {
         setLoadError(`Не удалось разобрать файл (${res.status})`);
         return;
       }
       setPreview(await res.json());
+      setPreviewForce(force);
     } catch (err) {
       setLoadError(String(err));
     } finally {
@@ -47,13 +52,14 @@ export function ImportXlsxButton() {
   const apply = () => {
     if (!preview) return;
     startTransition(async () => {
-      const res = await fetch("/api/import/apply", {
+      const res = await fetch(`/api/import/apply${previewForce ? "?force=1" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: preview.items }),
       });
       if (res.ok) {
         setPreview(null);
+        setPreviewForce(false);
         router.refresh();
       } else {
         setLoadError(`Применение не удалось (${res.status})`);
@@ -74,7 +80,7 @@ export function ImportXlsxButton() {
         onChange={onFile}
       />
       <button className="btn btn-secondary btn-sm" onClick={() => fileInput.current?.click()}>
-        Импорт xlsx
+        {dev.on ? "Импорт xlsx (force)" : "Импорт xlsx"}
       </button>
 
       {loadError && (
@@ -85,6 +91,19 @@ export function ImportXlsxButton() {
 
       {preview && (
         <Modal title="Что изменится после импорта" onClose={() => setPreview(null)} wide>
+          {previewForce && (
+            <div style={{
+              background: "rgba(204,120,92,0.10)",
+              border: "1px solid var(--brand-coral)",
+              borderRadius: 8,
+              padding: "10px 12px",
+              marginBottom: 14,
+              fontSize: 13,
+              color: "var(--brand-coral)",
+            }}>
+              Импорт в режиме разработчика. Статусы применятся напрямую, привязки к отгрузкам будут сняты, действие фиксируется в истории трека.
+            </div>
+          )}
           <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
             <Stat label="Обновится" n={preview.will_update} color="var(--brand-coral)" />
             <Stat label="Без изменений" n={preview.skipped} color="var(--on-dark-soft)" />

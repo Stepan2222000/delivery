@@ -8,6 +8,7 @@ import { NavLink } from "@/components/shared/NavLink";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { IconLogout } from "@/components/shared/Icons";
+import { DevModeProvider, DevModeToggle, DevModeBanner } from "@/components/admin/DevMode";
 
 async function logout() {
   "use server";
@@ -20,28 +21,32 @@ async function logout() {
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const u = await requireRole("admin");
   return (
-    <div className="dark-scope app-shell">
-      <header className="top-nav">
-        <Link href="/admin" className="brand">
-          Delivery<span className="dot">.</span>
-        </Link>
-        <nav className="nav-links" aria-label="Главное меню">
-          <NavLink href="/admin" exact>Главная</NavLink>
-          <NavLink href="/admin/untracked">Без трека</NavLink>
-          <NavLink href="/admin/settings">Настройки</NavLink>
-        </nav>
-        <SearchBar placeholder="Поиск по треку или товару" />
-        <div className="who">
-          <span className="who-name">{u.displayName}</span>
-          <ThemeToggle />
-          <form action={logout}>
-            <button className="btn btn-ghost btn-sm" type="submit" aria-label="Выйти">
-              <IconLogout width={18} height={18} />
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="app-content">{children}</main>
-    </div>
+    <DevModeProvider>
+      <div className="dark-scope app-shell">
+        <DevModeBanner />
+        <header className="top-nav">
+          <Link href="/admin" className="brand">
+            Delivery<span className="dot">.</span>
+          </Link>
+          <nav className="nav-links" aria-label="Главное меню">
+            <NavLink href="/admin" exact>Главная</NavLink>
+            <NavLink href="/admin/untracked">Без трека</NavLink>
+            <NavLink href="/admin/settings">Настройки</NavLink>
+          </nav>
+          <SearchBar placeholder="Поиск по треку или товару" />
+          <div className="who">
+            <span className="who-name">{u.displayName}</span>
+            <DevModeToggle />
+            <ThemeToggle />
+            <form action={logout}>
+              <button className="btn btn-ghost btn-sm" type="submit" aria-label="Выйти">
+                <IconLogout width={18} height={18} />
+              </button>
+            </form>
+          </div>
+        </header>
+        <main className="app-content">{children}</main>
+      </div>
+    </DevModeProvider>
   );
 }

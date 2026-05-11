@@ -85,13 +85,14 @@ export async function getParcel(tn: string): Promise<Parcel> {
 
 export async function patchParcel(
   tn: string,
-  patch: { status?: string; weightKg?: number; notes?: string; problem?: ProblemFlag | null },
+  patch: { status?: string; weightKg?: number; notes?: string; problem?: ProblemFlag | null; force?: boolean },
 ): Promise<Parcel> {
   const body: Record<string, unknown> = {};
   if (patch.status !== undefined) body.status = patch.status;
   if (patch.weightKg !== undefined) body.weight_kg = patch.weightKg;
   if (patch.notes !== undefined) body.notes = patch.notes;
   if (patch.problem !== undefined) body.problem = patch.problem;
+  if (patch.force) body.force = true;
   const data = await apiSend<ApiParcel>(`/parcels/${encodeURIComponent(tn)}`, "PATCH", body);
   return fromApi(data);
 }

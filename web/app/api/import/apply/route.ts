@@ -3,7 +3,8 @@ import { proxyToApi } from "@/lib/api/proxy";
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const res = await proxyToApi("/import/apply", {
+  const force = new URL(req.url).searchParams.get("force") === "1";
+  const res = await proxyToApi(`/import/apply${force ? "?force=true" : ""}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body,

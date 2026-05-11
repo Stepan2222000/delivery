@@ -67,7 +67,9 @@ async def export_xlsx(
     )
 
 
-async def _build_preview(pool: asyncpg.Pool, parsed: list[dict], role: str) -> ImportPreviewOut:
+async def _build_preview(
+    pool: asyncpg.Pool, parsed: list[dict], role: str, *, force: bool = False
+) -> ImportPreviewOut:
     # Look up current state for all referenced TNs in one query.
     tns = [r["tracking_number"] for r in parsed if "tracking_number" in r]
     async with pool.acquire() as conn:
@@ -115,7 +117,7 @@ async def _build_preview(pool: asyncpg.Pool, parsed: list[dict], role: str) -> I
                                                 changes={}, reason=f"unknown_status:{new_s}"))
                 continue
             if new_s != cur["status"]:
-                if role == "forwarder" and not can_forwarder_transition(cur["status"], new_s):
+                if not force and role == "forwarder" and not can_forwarder_transition(cur["status"], new_s):
                     errors += 1
                     items.append(ImportPreviewItem(tracking_number=tn, action="error",
                                                     changes={}, reason=f"forbidden_transition:{cur['status']}->{new_s}"))
@@ -135,8 +137,11 @@ async def _build_preview(pool: asyncpg.Pool, parsed: list[dict], role: str) -> I
 async def import_preview(
     request: Request,
     file: UploadFile = File(...),
+    force: bool = False,
     user: CurrentUser = Depends(get_current_user),
 ):
+    if force and user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "admin_only")
     data = await file.read()
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "empty_file")
@@ -144,17 +149,21 @@ async def import_preview(
         parsed = parse_xlsx(data)
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"parse_failed:{e}")
-    return await _build_preview(request.app.state.pool, parsed, user.role)
+    return await _build_preview(request.app.state.pool, parsed, user.role, force=force)
 
 
 @router.post("/import/apply")
 async def import_apply(
     body: ImportApplyIn,
     request: Request,
+    force: bool = False,
     user: CurrentUser = Depends(get_current_user),
 ):
+    if force and user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "admin_only")
     pool: asyncpg.Pool = request.app.state.pool
     applied = 0
+    note = "xlsx import (force)" if force else "xlsx import"
     async with pool.acquire() as conn:
         async with conn.transaction():
             for it in body.items:
@@ -170,6 +179,9 @@ async def import_apply(
                     if field == "status":
                         args.append(val)
                         sets.append(f"status = ${len(args)}::parcel_status")
+                        if force:
+                            sets.append("shipment_usa_to_kg_id = NULL")
+                            sets.append("shipment_kg_to_ru_id = NULL")
                     elif field == "weight_kg":
                         args.append(val)
                         sets.append(f"weight_kg = ${len(args)}")
@@ -183,13 +195,13 @@ async def import_apply(
                     f"UPDATE parcels_mutations SET {', '.join(sets)} WHERE tracking_number = ${len(args)}",
                     *args,
                 )
-                if prev_status is not None and prev_status != it.changes["status"]:
+                if prev_status is not None and "status" in it.changes and prev_status != it.changes["status"]:
                     await conn.execute(
                         """
                         INSERT INTO parcel_history (tracking_number, from_status, to_status, actor_id, note)
-                        VALUES ($1, $2::parcel_status, $3::parcel_status, $4, 'xlsx import')
+                        VALUES ($1, $2::parcel_status, $3::parcel_status, $4, $5)
                         """,
-                        it.tracking_number, prev_status, it.changes["status"], user.id,
+                        it.tracking_number, prev_status, it.changes["status"], user.id, note,
                     )
                 applied += 1
     return {"applied": applied}

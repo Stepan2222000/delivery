@@ -57,6 +57,9 @@ class ParcelPatch(BaseModel):
     weight_kg: Decimal | None = None
     notes: str | None = None
     problem: ProblemFlag | None = None
+    # Admin "режим разработчика": накатить status напрямую без авто-простановки
+    # дат и без проверок forwarder-перехода. Привязки к shipment снимаются.
+    force: bool = False
 
 
 class ShipmentOut(BaseModel):

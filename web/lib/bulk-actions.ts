@@ -17,11 +17,12 @@ export interface BulkResult {
 export async function bulkChangeStatus(
   trackingNumbers: string[],
   status: string,
+  force = false,
 ): Promise<BulkResult> {
   const result: BulkResult = { applied: 0, errors: [] };
   for (const tn of trackingNumbers) {
     try {
-      await patchParcel(tn, { status });
+      await patchParcel(tn, { status, force });
       result.applied += 1;
     } catch (e) {
       const reason = e instanceof ApiError ? e.detail : String(e);

@@ -138,27 +138,36 @@ async def patch_parcel(
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "parcel_not_found")
             from_status = current["status"]
 
+            if body.force and user.role != "admin":
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "admin_only")
+
             sets: list[str] = []
             args: list = []
             new_status = body.status
 
             if new_status is not None and new_status != from_status:
-                if user.role == "forwarder" and not can_forwarder_transition(from_status, new_status):
-                    raise HTTPException(
-                        status.HTTP_403_FORBIDDEN,
-                        f"forbidden_transition:{from_status}->{new_status}",
-                    )
-                args.append(new_status)
-                sets.append(f"status = ${len(args)}::parcel_status")
-                now_clause = "now()"
-                if new_status == "arrived_usa":
-                    sets.append(f"arrived_usa_at = COALESCE(arrived_usa_at, {now_clause})")
-                elif new_status == "received_by_forwarder_usa":
-                    sets.append(f"received_usa_at = COALESCE(received_usa_at, {now_clause})")
-                elif new_status == "arrived_kg":
-                    sets.append(f"arrived_kg_at = COALESCE(arrived_kg_at, {now_clause})")
-                elif new_status == "delivered_ru":
-                    sets.append(f"delivered_ru_at = COALESCE(delivered_ru_at, {now_clause})")
+                if body.force:
+                    args.append(new_status)
+                    sets.append(f"status = ${len(args)}::parcel_status")
+                    sets.append("shipment_usa_to_kg_id = NULL")
+                    sets.append("shipment_kg_to_ru_id = NULL")
+                else:
+                    if user.role == "forwarder" and not can_forwarder_transition(from_status, new_status):
+                        raise HTTPException(
+                            status.HTTP_403_FORBIDDEN,
+                            f"forbidden_transition:{from_status}->{new_status}",
+                        )
+                    args.append(new_status)
+                    sets.append(f"status = ${len(args)}::parcel_status")
+                    now_clause = "now()"
+                    if new_status == "arrived_usa":
+                        sets.append(f"arrived_usa_at = COALESCE(arrived_usa_at, {now_clause})")
+                    elif new_status == "received_by_forwarder_usa":
+                        sets.append(f"received_usa_at = COALESCE(received_usa_at, {now_clause})")
+                    elif new_status == "arrived_kg":
+                        sets.append(f"arrived_kg_at = COALESCE(arrived_kg_at, {now_clause})")
+                    elif new_status == "delivered_ru":
+                        sets.append(f"delivered_ru_at = COALESCE(delivered_ru_at, {now_clause})")
 
             if body.weight_kg is not None:
                 args.append(body.weight_kg)
@@ -182,10 +191,11 @@ async def patch_parcel(
             if new_status is not None and new_status != from_status:
                 await conn.execute(
                     """
-                    INSERT INTO parcel_history (tracking_number, from_status, to_status, actor_id)
-                    VALUES ($1, $2, $3, $4)
+                    INSERT INTO parcel_history (tracking_number, from_status, to_status, actor_id, note)
+                    VALUES ($1, $2, $3, $4, $5)
                     """,
                     tracking_number, from_status, new_status, user.id,
+                    "admin force" if body.force else None,
                 )
 
     return await get_parcel(tracking_number, request, user)
