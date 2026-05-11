@@ -75,6 +75,7 @@ jobs:
         with:
           context: ./web
           platforms: linux/amd64
+          no-cache: true
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/delivery-web:latest

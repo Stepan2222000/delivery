@@ -4,6 +4,7 @@ import { isOverdue, overdueReason, formatDate } from "@/lib/derive";
 import { StatusPill } from "@/components/shared/StatusPill";
 import { CopyTrack } from "@/components/shared/CopyTrack";
 import { RowCheckbox, HeaderCheckbox } from "@/components/shared/Selection";
+import { SearchBar } from "@/components/shared/SearchBar";
 
 const FILTERS: { key: string; label: string; statuses: ParcelStatus[] | "all" | "late" }[] = [
   { key: "all",          label: "Все",          statuses: "all" },
@@ -64,9 +65,12 @@ export function ParcelsTable({
 
   return (
     <section className="card" style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
-        <h2 className="title-lg" style={{ color: "var(--on-dark-strong)", margin: 0 }}>Все треки</h2>
-        <span className="caption">{rows.length} из {parcels.filter(p => p.status !== "cancelled").length}</span>
+      <div className="tracks-card-head">
+        <div>
+          <h2 className="title-lg" style={{ color: "var(--on-dark-strong)", margin: 0 }}>Все треки</h2>
+          <span className="caption">{rows.length} из {parcels.filter(p => p.status !== "cancelled").length}</span>
+        </div>
+        <SearchBar placeholder="Поиск по треку или товару" defaultOpen />
       </div>
 
       <div className="chip-row" style={{ marginBottom: 16 }}>

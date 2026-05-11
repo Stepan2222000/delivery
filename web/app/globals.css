@@ -633,6 +633,17 @@ label.field > .field-label {
   width: min(520px, 100%);
   margin-bottom: 16px;
 }
+.tracks-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.tracks-card-head .search-bar {
+  width: min(420px, 100%);
+}
 .search-bar {
   display: inline-flex;
   align-items: center;
