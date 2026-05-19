@@ -38,6 +38,12 @@ export default async function AdminTrackDetail({ params }: { params: Promise<{ t
         <div style={{ marginBottom: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <StatusPill status={parcel.status} />
           <ForceStatusButton trackingNumber={parcel.trackingNumber} currentStatus={parcel.status} />
+          {parcel.isManual ? (
+            <span className="caption-up" style={{
+              padding: "4px 8px", borderRadius: 4,
+              background: "rgba(255,140,90,0.15)", color: "var(--accent-coral)",
+            }}>Незнакомый трек</span>
+          ) : null}
         </div>
         <div style={{ marginBottom: 8 }}><CopyTrack value={parcel.trackingNumber} size="xl" /></div>
         <div className="body-sm muted" style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>

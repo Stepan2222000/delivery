@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { NavLink } from "@/components/shared/NavLink";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { IconLogout } from "@/components/shared/Icons";
+import { LookupNavLink } from "@/components/lookup/LookupNavLink";
 
 async function logout() {
   "use server";
@@ -27,6 +28,7 @@ export default async function ForwarderLayout({ children }: { children: ReactNod
         <nav className="nav-links" aria-label="Главное меню">
           <NavLink href="/forwarder" exact>Треки</NavLink>
           <NavLink href="/forwarder/shipment/new">Новая отгрузка</NavLink>
+          <LookupNavLink href="/forwarder/unknown" />
         </nav>
         <div className="who">
           <span className="who-name">{u.displayName}</span>

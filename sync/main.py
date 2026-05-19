@@ -31,16 +31,25 @@ INTERVAL_MIN = int(os.environ.get("SYNC_INTERVAL_MINUTES", "5"))
 
 
 SQL_FETCH_NEW = """
+WITH all_tracks AS (
+    SELECT t.order_id, t.tracking_number
+      FROM ebay_remote.order_tracking_numbers t
+    UNION ALL
+    SELECT o.order_id, unnest(o.delivery_extra_tracks)
+      FROM ebay_remote.orders o
+     WHERE o.delivery_extra_tracks IS NOT NULL
+       AND array_length(o.delivery_extra_tracks, 1) > 0
+)
 SELECT
     o.order_number,
     o.ordered_at,
     o.delivery_status,
     o.delivered_date,
     o.arriving_by_date,
-    t.tracking_number
-FROM ebay_remote.orders o
-JOIN ebay_remote.order_tracking_numbers t USING (order_id)
-LEFT JOIN parcels_mutations pm ON pm.tracking_number = t.tracking_number
+    at.tracking_number
+FROM all_tracks at
+JOIN ebay_remote.orders o USING (order_id)
+LEFT JOIN parcels_mutations pm ON pm.tracking_number = at.tracking_number
 WHERE o.is_untracked = false
   AND o.ordered_at IS NOT NULL
   AND o.ordered_at >= (SELECT cutoff_date::timestamptz FROM settings WHERE id = 1)

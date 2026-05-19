@@ -7,6 +7,8 @@ services:
       - "3301:8000"
     environment:
       DELIVERY_PG_DSN: postgresql://admin:Password123@194.164.245.107:5408/delivery
+      DELIVERY_AGENT_PG_DSN: postgresql://admin:Password123@194.164.245.107:5412/delivery_agent
+      EBAY_ORDERS_PG_DSN: postgresql://admin:Password123@194.164.245.107:5405/ebay_orders
       WEB_ORIGIN: http://194.164.245.107:3300
       MINIO_ENDPOINT: 194.164.245.107:9000
       MINIO_ACCESS_KEY: admin
@@ -14,10 +16,14 @@ services:
       MINIO_SECURE: "false"
       MINIO_BUCKET_PHOTOS: parts-photos
       MINIO_PHOTO_PREFIX: delivery/parcels
+      MINIO_LOOKUP_PREFIX: delivery/lookup
       MINIO_BUCKET_WAYBILLS: delivery-photos
       MINIO_PUBLIC_BASE: http://194.164.245.107:9000
       COOKIE_NAME: delivery_session
       SESSION_TTL_DAYS: "30"
+      LLM_BASE_URL: http://194.164.245.107:8317/v1
+      LLM_API_KEY: local-gpt55
+      LLM_MODEL: cursor-gpt55(high)
     networks:
       - db_default
 
