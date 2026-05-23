@@ -49,7 +49,6 @@ class ParcelOut(BaseModel):
     delivered_ru_at: datetime | None
     notes: str | None
     photos: list[str] = Field(default_factory=list)
-    is_manual: bool = False
     admin_only: AdminOnlyFields | None = None
 
 

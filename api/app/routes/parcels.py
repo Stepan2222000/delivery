@@ -16,8 +16,7 @@ PARCEL_COLS = """
     shipment_usa_to_kg_id, arrived_kg_at, weight_kg,
     shipment_kg_to_ru_id, delivered_ru_at, notes,
     source_order_number, sold_by, item_title, order_total_usd,
-    shipping_cost_usd_snapshot, tariff_snapshot_usd_per_kg,
-    is_manual
+    shipping_cost_usd_snapshot, tariff_snapshot_usd_per_kg
 """
 
 
@@ -37,7 +36,6 @@ def _row_to_parcel(row: asyncpg.Record, *, include_admin: bool, photos: list[str
         delivered_ru_at=row["delivered_ru_at"],
         notes=row["notes"],
         photos=photos,
-        is_manual=bool(row["is_manual"]),
     )
     if include_admin:
         p.admin_only = AdminOnlyFields(

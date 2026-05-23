@@ -16,7 +16,6 @@ interface ApiParcel {
   delivered_ru_at: string | null;
   notes: string | null;
   photos: string[];
-  is_manual: boolean;
   admin_only: {
     source_order_number: string;
     sold_by: string | null;
@@ -43,7 +42,6 @@ function fromApi(p: ApiParcel): Parcel {
     deliveredRuAt: p.delivered_ru_at,
     notes: p.notes,
     photos: p.photos ?? [],
-    isManual: Boolean(p.is_manual),
     adminOnly: p.admin_only
       ? {
           sourceOrderNumber: p.admin_only.source_order_number,

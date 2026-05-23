@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .db import create_pool, create_agent_pool, create_ebay_pool
+from .db import create_pool
 from .storage import create_minio
 from .routes import auth as auth_routes
 from .routes import parcels as parcels_routes
@@ -11,21 +11,16 @@ from .routes import shipments as shipments_routes
 from .routes import settings as settings_routes
 from .routes import photos as photos_routes
 from .routes import excel as excel_routes
-from .routes import lookup as lookup_routes
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.pool = await create_pool()
-    app.state.agent_pool = await create_agent_pool()
-    app.state.ebay_pool = await create_ebay_pool()
     app.state.minio = create_minio()
     try:
         yield
     finally:
         await app.state.pool.close()
-        await app.state.agent_pool.close()
-        await app.state.ebay_pool.close()
 
 
 app = FastAPI(title="Delivery API", lifespan=lifespan)
@@ -45,7 +40,6 @@ app.include_router(shipments_routes.router)
 app.include_router(settings_routes.router)
 app.include_router(photos_routes.router)
 app.include_router(excel_routes.router)
-app.include_router(lookup_routes.router)
 
 
 @app.get("/healthz")

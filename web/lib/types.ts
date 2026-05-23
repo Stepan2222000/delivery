@@ -32,7 +32,6 @@ export interface Parcel {
   deliveredRuAt: string | null;
   photos: string[];
   notes: string | null;
-  isManual: boolean;
   // Admin-only fields — must NOT be sent to forwarder DTO
   adminOnly: {
     sourceOrderNumber: string;
@@ -82,81 +81,4 @@ export interface User {
   id: string;
   role: Role;
   displayName: string;
-}
-
-export type LookupStatus =
-  | "draft"
-  | "searching"
-  | "pending_admin"
-  | "linked"
-  | "rejected";
-
-export interface LookupRequest {
-  id: string;
-  trackingNumber: string | null;
-  note: string | null;
-  status: LookupStatus;
-  linkedOrderId: number | null;
-  proposedOrderId: number | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  submittedBy: string | null;
-  submittedAt: string | null;
-  decidedBy: string | null;
-  decidedAt: string | null;
-  photoCount: number;
-  messageCount: number;
-}
-
-export interface LookupPhoto {
-  id: number;
-  objectKey: string;
-  publicUrl: string;
-  mimeType: string;
-  source: "initial" | "chat";
-  uploadedBy: string;
-  uploadedAt: string;
-}
-
-export interface LookupCandidate {
-  order_id: number;
-  reason: string;
-  confidence: "low" | "medium" | "high";
-}
-
-export interface LookupStructured {
-  direct_match: { order_id: number; evidence: string } | null;
-  candidates: LookupCandidate[];
-  questions: string[];
-  reasoning: string;
-}
-
-export interface LookupMessage {
-  id: number;
-  role: "user" | "assistant" | "system";
-  authorLogin: string | null;
-  contentText: string | null;
-  attachments: Array<{ object_key: string; mime_type: string; public_url?: string }> | null;
-  structured: LookupStructured | null;
-  createdAt: string;
-}
-
-export interface LookupLinkedOrder {
-  order_id: number;
-  order_number: string;
-  sold_by: string;
-  items: string | null;
-}
-
-export interface LookupDetail {
-  request: LookupRequest;
-  photos: LookupPhoto[];
-  messages: LookupMessage[];
-  linkedOrder: LookupLinkedOrder | null;
-}
-
-export interface LookupBadge {
-  pendingAdmin: number;
-  searching: number;
 }

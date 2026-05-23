@@ -8,7 +8,6 @@ import { NavLink } from "@/components/shared/NavLink";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { IconLogout } from "@/components/shared/Icons";
 import { DevModeProvider, DevModeToggle, DevModeBanner } from "@/components/admin/DevMode";
-import { LookupNavLink } from "@/components/lookup/LookupNavLink";
 
 async function logout() {
   "use server";
@@ -31,7 +30,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <nav className="nav-links" aria-label="Главное меню">
             <NavLink href="/admin" exact>Главная</NavLink>
             <NavLink href="/admin/untracked">Без трека</NavLink>
-            <LookupNavLink href="/admin/unknown" />
             <NavLink href="/admin/settings">Настройки</NavLink>
           </nav>
           <div className="who">
