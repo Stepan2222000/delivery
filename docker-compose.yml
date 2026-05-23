@@ -26,6 +26,11 @@ services:
       LLM_MODEL: cursor-gpt55(high)
     networks:
       - db_default
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   sync:
     image: ghcr.io/stepan2222000/delivery-sync:${IMAGE_TAG:-latest}
@@ -38,6 +43,11 @@ services:
       - db_default
     depends_on:
       - api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     image: ghcr.io/stepan2222000/delivery-web:${IMAGE_TAG:-latest}
@@ -52,6 +62,11 @@ services:
       - api
     networks:
       - db_default
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   db_default:

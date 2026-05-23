@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconCheck, IconCopy } from "./Icons";
 
 export function CopyButton({ value, ariaLabel }: { value: string; ariaLabel?: string }) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
   return (
     <button
       type="button"
@@ -14,7 +18,8 @@ export function CopyButton({ value, ariaLabel }: { value: string; ariaLabel?: st
         try {
           await navigator.clipboard.writeText(value);
           setCopied(true);
-          setTimeout(() => setCopied(false), 1200);
+          if (timerRef.current) clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => setCopied(false), 1200);
         } catch {
           /* clipboard blocked, ignore */
         }

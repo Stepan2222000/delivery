@@ -371,17 +371,17 @@ async def run_ai(
         initial_photos_as_data_urls=initial_urls,
     )
 
-    client = make_client()
-    try:
-        parsed = await call_llm_structured(client, messages)
-    except Exception as e:
-        # Persist a system-visible error message so the chat doesn't go silent
-        async with agent.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO ai_messages (request_id, role, content_text) VALUES ($1, 'assistant', $2)",
-                rid, f"[ошибка llm] {e}",
-            )
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"llm_error:{e}")
+    async with make_client() as client:
+        try:
+            parsed = await call_llm_structured(client, messages)
+        except Exception as e:
+            # Persist a system-visible error message so the chat doesn't go silent
+            async with agent.acquire() as conn:
+                await conn.execute(
+                    "INSERT INTO ai_messages (request_id, role, content_text) VALUES ($1, 'assistant', $2)",
+                    rid, f"[ошибка llm] {e}",
+                )
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"llm_error:{e}")
 
     # Persist assistant message
     summary = parsed.get("reasoning") or ""

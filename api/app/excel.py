@@ -94,6 +94,7 @@ def build_xlsx(rows: list[dict[str, Any]]) -> bytes:
 
     buf = io.BytesIO()
     wb.save(buf)
+    wb.close()
     return buf.getvalue()
 
 
@@ -104,38 +105,40 @@ def parse_xlsx(data: bytes) -> list[dict[str, Any]]:
     to internal codes; weight coerced to float; dates parsed with tolerance.
     """
     wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
-    ws = wb.active
-    rows_iter = ws.iter_rows(values_only=True)
-    header = next(rows_iter, None)
-    if not header:
-        return []
-    name_to_field = {label: field for label, field in COLUMNS}
-    indexed_fields: list[str | None] = [
-        name_to_field.get((str(h).strip() if h else "")) for h in header
-    ]
-    out: list[dict[str, Any]] = []
-    for row in rows_iter:
-        if not any(c is not None and str(c).strip() != "" for c in row):
-            continue
-        rec: dict[str, Any] = {}
-        for idx, value in enumerate(row):
-            field = indexed_fields[idx] if idx < len(indexed_fields) else None
-            if field is None:
+    try:
+        ws = wb.active
+        rows_iter = ws.iter_rows(values_only=True)
+        header = next(rows_iter, None)
+        if not header:
+            return []
+        name_to_field = {label: field for label, field in COLUMNS}
+        indexed_fields: list[str | None] = [
+            name_to_field.get((str(h).strip() if h else "")) for h in header
+        ]
+        out: list[dict[str, Any]] = []
+        for row in rows_iter:
+            if not any(c is not None and str(c).strip() != "" for c in row):
                 continue
-            if field == "status" and isinstance(value, str):
-                rec[field] = STATUS_FROM_RU.get(value.strip(), value.strip())
-            elif field == "weight_kg" and value not in (None, ""):
-                try:
-                    rec[field] = float(value)
-                except (TypeError, ValueError):
-                    rec[field] = ("__invalid__", str(value))
-            elif field == "tracking_number" and value is not None:
-                rec[field] = str(value).strip()
-            elif value is None or (isinstance(value, str) and value.strip() == ""):
-                continue
-            else:
-                rec[field] = value
-        if "tracking_number" in rec:
-            out.append(rec)
-    wb.close()
-    return out
+            rec: dict[str, Any] = {}
+            for idx, value in enumerate(row):
+                field = indexed_fields[idx] if idx < len(indexed_fields) else None
+                if field is None:
+                    continue
+                if field == "status" and isinstance(value, str):
+                    rec[field] = STATUS_FROM_RU.get(value.strip(), value.strip())
+                elif field == "weight_kg" and value not in (None, ""):
+                    try:
+                        rec[field] = float(value)
+                    except (TypeError, ValueError):
+                        rec[field] = ("__invalid__", str(value))
+                elif field == "tracking_number" and value is not None:
+                    rec[field] = str(value).strip()
+                elif value is None or (isinstance(value, str) and value.strip() == ""):
+                    continue
+                else:
+                    rec[field] = value
+            if "tracking_number" in rec:
+                out.append(rec)
+        return out
+    finally:
+        wb.close()

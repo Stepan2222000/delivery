@@ -95,7 +95,6 @@ async def main_loop():
                 await sync_once(pool)
             except Exception as e:
                 log.exception("sync iteration failed: %s", e)
-                raise
             await asyncio.sleep(INTERVAL_MIN * 60)
     finally:
         await pool.close()
