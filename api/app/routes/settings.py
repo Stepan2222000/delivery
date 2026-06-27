@@ -67,7 +67,10 @@ async def list_untracked(
         rows = await conn.fetch(
             """
             SELECT o.order_number AS source_order_number,
-                   (SELECT i.item_title FROM ebay_remote.order_items i WHERE i.order_id = o.order_id LIMIT 1) AS item_title,
+                   (SELECT it.item_title
+                      FROM ebay_remote.order_items i
+                      JOIN ebay_remote.items it ON it.item_number = i.item_number
+                     WHERE i.order_id = o.order_id LIMIT 1) AS item_title,
                    o.ordered_at,
                    o.delivery_status
               FROM ebay_remote.orders o

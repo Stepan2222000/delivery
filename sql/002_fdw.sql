@@ -55,10 +55,17 @@ CREATE FOREIGN TABLE ebay_remote.order_tracking_numbers (
 
 CREATE FOREIGN TABLE ebay_remote.order_items (
     order_id      bigint,
-    item_title    text,
+    item_number   text,
     item_quantity int
 ) SERVER ebay_server
   OPTIONS (schema_name 'public', table_name 'order_items');
+
+-- item_title was normalized out of order_items into `items` (keyed by item_number).
+CREATE FOREIGN TABLE ebay_remote.items (
+    item_number text,
+    item_title  text
+) SERVER ebay_server
+  OPTIONS (schema_name 'public', table_name 'items');
 
 ANALYZE ebay_remote.orders;
 ANALYZE ebay_remote.order_tracking_numbers;

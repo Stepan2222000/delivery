@@ -37,10 +37,11 @@ WITH agg AS (
         single_or_raise(o.sold_by)                                     AS sold_by,
         SUM(o.order_total_usd)                                         AS order_total_usd,
         MAX(o.delivered_date)::timestamptz                             AS arrived_usa_at,
-        STRING_AGG(DISTINCT i.item_title, ' · ' ORDER BY i.item_title) AS item_title
+        STRING_AGG(DISTINCT it.item_title, ' · ' ORDER BY it.item_title) AS item_title
     FROM ebay_remote.order_tracking_numbers t
     LEFT JOIN ebay_remote.orders o      ON o.order_id = t.order_id
     LEFT JOIN ebay_remote.order_items i ON i.order_id = o.order_id
+    LEFT JOIN ebay_remote.items it      ON it.item_number = i.item_number
     GROUP BY t.tracking_number
 )
 SELECT
